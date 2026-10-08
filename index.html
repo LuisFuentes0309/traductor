@@ -57,6 +57,7 @@
   .pie{ text-align:center; color:#777; font-size:13px; margin-top:25px; padding-top:15px; border-top:1px solid #e3e3e3; }
   .pie a{ color:#1565C0; text-decoration:none; }
   #pantallaClave{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:10; padding:16px; }
+  #pantallaClave[hidden]{ display:none; }
   #pantallaClave .caja{ background:#fff; border-radius:10px; padding:25px; max-width:360px; width:100%; text-align:center; box-shadow:0 0 20px rgba(0,0,0,.3); }
   #pantallaClave input{ width:100%; box-sizing:border-box; padding:10px; font-size:16px; margin:12px 0; }
   #errorClave{ color:#c62828; font-size:14px; min-height:18px; }
@@ -417,8 +418,20 @@ async function servidor(accion, ...args) {
   let ultimoError = null;
   for (let intento = 0; intento < 3; intento++) {
     try {
-      const r = await fetch(URL_API, { method: "POST", body: JSON.stringify({ accion: accion, args: args, clave: claveAcceso }) });
-      const texto = await r.text();
+      // Si el servidor no contesta en 15 s, se corta y se reintenta
+      const control = new AbortController();
+      const limite = setTimeout(() => control.abort(), 15000);
+      let texto;
+      try {
+        const r = await fetch(URL_API, {
+          method: "POST",
+          body: JSON.stringify({ accion: accion, args: args, clave: claveAcceso }),
+          signal: control.signal
+        });
+        texto = await r.text();
+      } finally {
+        clearTimeout(limite);
+      }
       let j;
       try { j = JSON.parse(texto); } catch (e) { throw new Error("respuesta no válida del servidor"); }
       if (!j.ok) {
@@ -476,7 +489,7 @@ $("formClave").addEventListener("submit", e => {
   $("errorClave").textContent = "Verificando…";
   guardarClave(intento);
   servidor("verificarClave")
-    .then(() => { $("pantallaClave").hidden = true; $("btnClave").disabled = false; })
+    .then(() => { $("pantallaClave").hidden = true; $("btnClave").disabled = false; $("errorClave").textContent = ""; })
     .catch(err => {
       $("btnClave").disabled = false;
       if (!$("pantallaClave").hidden) $("errorClave").textContent = err.message === "Se necesita la clave de acceso." ? "Clave incorrecta." : err.message;
