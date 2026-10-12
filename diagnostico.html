@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!-- Diagnóstico de micrófono – © Ing. Luis Fuentes Robles – Todos los derechos reservados -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnóstico de micrófono</title>
+<style>
+  body{ font-family:Arial, sans-serif; background:#f2f2f2; margin:8px; color:#222; }
+  .caja{ max-width:600px; margin:auto; background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,.15); }
+  h2{ color:#1565C0; margin:0 0 6px; font-size:20px; }
+  p{ margin:6px 0; }
+  button{ width:100%; padding:14px; margin:6px 0; border:none; border-radius:6px; background:#1565C0; color:#fff; font-size:16px; }
+  button.gris{ background:#e0e0e0; color:#333; }
+  button.rojo{ background:#c62828; }
+  .nivel{ height:14px; background:#e3e3e3; border-radius:7px; overflow:hidden; margin:6px 0; }
+  #barra{ height:100%; width:0; background:#43a047; }
+  #registro{ background:#111; color:#9f9; font-family:monospace; font-size:12px; padding:8px; border-radius:6px; height:300px; overflow-y:auto; white-space:pre-wrap; }
+  .suave{ color:#777; font-size:13px; }
+  #oido{ font-size:18px; font-weight:bold; color:#0D47A1; min-height:24px; }
+</style>
+</head>
+<body>
+<div class="caja">
+  <h2>🔧 Diagnóstico de micrófono</h2>
+  <p class="suave">Haz las 3 pruebas en orden. Al final toca "Copiar registro" y pégalo en el chat, o envía una captura de pantalla.</p>
+
+  <p><b>Prueba 1:</b> ¿el micrófono capta sonido?</p>
+  <button id="btnNivel">🎙 Prueba 1: medir volumen (5 s)</button>
+  <div class="nivel"><div id="barra"></div></div>
+
+  <p><b>Prueba 2:</b> reconocimiento de voz. Toca, espera el pitido y di una frase.</p>
+  <button id="btnEs">🗣 Prueba 2A: español</button>
+  <button id="btnEn">🗣 Prueba 2B: inglés</button>
+  <button id="btnDetener" class="rojo">⏹ Detener</button>
+  <p>Entendió: <span id="oido">—</span></p>
+
+  <button id="btnCopiar" class="gris">📋 Copiar registro</button>
+  <div id="registro"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const t0 = Date.now();
+function log(txt) {
+  const s = ((Date.now() - t0) / 1000).toFixed(1).padStart(6);
+  $("registro").textContent += s + "s  " + txt + "\n";
+  $("registro").scrollTop = $("registro").scrollHeight;
+}
+
+const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+log("Navegador: " + navigator.userAgent);
+log("Reconocimiento de voz disponible: " + (R ? "SÍ" : "NO"));
+log("Página segura (https): " + window.isSecureContext);
+
+if (navigator.permissions) {
+  navigator.permissions.query({ name: "microphone" })
+    .then(p => log("Permiso de micrófono para esta página: " + p.state))
+    .catch(() => log("Permiso de micrófono: no se pudo consultar"));
+}
+
+// ---------- Prueba 1: volumen con getUserMedia ----------
+$("btnNivel").addEventListener("click", async () => {
+  log("— Prueba 1: pidiendo micrófono…");
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    log("✖ Prueba 1 falló: " + e.name + " – " + e.message);
+    return;
+  }
+  const pista = stream.getAudioTracks()[0];
+  log("✔ Micrófono abierto: " + (pista ? pista.label : "sin nombre"));
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const an = ctx.createAnalyser();
+  an.fftSize = 1024;
+  ctx.createMediaStreamSource(stream).connect(an);
+  const datos = new Uint8Array(an.fftSize);
+  let maximo = 0;
+  const fin = Date.now() + 5000;
+  const ciclo = () => {
+    an.getByteTimeDomainData(datos);
+    let suma = 0;
+    for (let i = 0; i < datos.length; i++) { const v = (datos[i] - 128) / 128; suma += v * v; }
+    const nivel = Math.min(100, Math.round(Math.sqrt(suma / datos.length) * 400));
+    maximo = Math.max(maximo, nivel);
+    $("barra").style.width = nivel + "%";
+    if (Date.now() < fin) requestAnimationFrame(ciclo);
+    else {
+      stream.getTracks().forEach(t => t.stop());
+      ctx.close();
+      $("barra").style.width = "0";
+      log((maximo > 5 ? "✔" : "✖") + " Volumen máximo captado: " + maximo + " de 100");
+      log("  (micrófono liberado)");
+    }
+  };
+  ciclo();
+});
+
+// ---------- Prueba 2: reconocimiento con registro de cada evento ----------
+let rec = null;
+
+function probar(lang) {
+  if (!R) { log("✖ Este navegador no tiene reconocimiento de voz"); return; }
+  if (rec) { try { rec.abort(); } catch (e) {} rec = null; }
+  $("oido").textContent = "…";
+  log("— Prueba 2 (" + lang + "): iniciando…");
+  rec = new R();
+  rec.lang = lang;
+  rec.continuous = false;
+  rec.interimResults = true;
+  rec.maxAlternatives = 1;
+  ["start", "audiostart", "soundstart", "speechstart", "speechend", "soundend", "audioend", "nomatch"]
+    .forEach(ev => rec.addEventListener(ev, () => log("  evento: " + ev)));
+  rec.onresult = e => {
+    let texto = "";
+    for (let i = 0; i < e.results.length; i++) {
+      texto += e.results[i][0].transcript;
+      log("  resultado " + (e.results[i].isFinal ? "FINAL" : "parcial") + ": \"" + e.results[i][0].transcript +
+          "\" (confianza " + (e.results[i][0].confidence || 0).toFixed(2) + ")");
+    }
+    $("oido").textContent = texto;
+  };
+  rec.onerror = e => log("  ✖ ERROR: " + e.error + (e.message ? " – " + e.message : ""));
+  rec.onend = () => { log("  evento: end"); rec = null; };
+  try { rec.start(); log("  start() aceptado"); }
+  catch (e) { log("  ✖ start() rechazado: " + e.name + " – " + e.message); }
+  setTimeout(() => { if (rec) { log("  (10 s: deteniendo)"); try { rec.stop(); } catch (e) {} } }, 10000);
+}
+
+$("btnEs").addEventListener("click", () => probar("es-CR"));
+$("btnEn").addEventListener("click", () => probar("en-US"));
+$("btnDetener").addEventListener("click", () => { if (rec) { log("  (detenido a mano)"); try { rec.stop(); } catch (e) {} } });
+
+$("btnCopiar").addEventListener("click", () => {
+  const txt = $("registro").textContent;
+  const ok = () => { $("btnCopiar").textContent = "✔ Copiado"; setTimeout(() => $("btnCopiar").textContent = "📋 Copiar registro", 1500); };
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok, () => alert("No se pudo copiar; envía una captura de pantalla."));
+  else alert("No se pudo copiar; envía una captura de pantalla.");
+});
+</script>
+</body>
+</html>
