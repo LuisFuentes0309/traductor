@@ -1011,7 +1011,8 @@ function sondear() {
       r.mensajes.forEach(m => {
         const original = m.idiomaOrigen !== sala.idioma ? m.original : "";
         agregarAlRegistro(m.nombre, m.texto, false, original);
-        sala.historial.push({ tipo: "mensaje", hora: m.hora || Date.now(), quien: m.nombre, texto: m.texto, original: original });
+        sala.historial.push({ tipo: "mensaje", hora: m.hora || Date.now(), quien: m.nombre, texto: m.texto,
+          otros: original ? [{ idioma: IDIOMAS[m.idiomaOrigen].nombre, texto: original }] : [] });
         sala.cola.push(m);
       });
       reproducirCola();
@@ -1128,6 +1129,10 @@ function reproducirAvisoSonoro() {
 }
 
 function agregarAlRegistro(quien, texto, esMio, original) {
+  return agregarBurbuja(quien, texto, esMio, original);
+}
+
+function agregarBurbuja(quien, texto, esMio, original) {
   const reg = $("registro");
   const div = document.createElement("div");
   div.className = "msg " + (esMio ? "mio" : "otro");
@@ -1146,6 +1151,7 @@ function agregarAlRegistro(quien, texto, esMio, original) {
   }
   reg.appendChild(div);
   reg.scrollTop = reg.scrollHeight;
+  return div;
 }
 
 // ---------- Reproducir lo que dicen los demás ----------
@@ -1417,10 +1423,24 @@ function procesarFrase(texto, confianza) {
 }
 
 function enviarFrase(texto) {
-  agregarAlRegistro("", texto, true, "");
-  sala.historial.push({ tipo: "mensaje", hora: Date.now(), quien: sala.nombre + " (yo)", texto: texto, original: "" });
+  const burbuja = agregarAlRegistro("", texto, true, "");
+  const entrada = { tipo: "mensaje", hora: Date.now(), quien: sala.nombre + " (yo)", texto: texto, otros: [] };
+  sala.historial.push(entrada);
   servidor("enviarMensaje", sala.codigo, sala.miId, texto)
-    .then(() => { if ($("avisoSala").textContent.indexOf("No se pudo enviar") === 0) aviso(""); })
+    .then(r => {
+      if ($("avisoSala").textContent.indexOf("No se pudo enviar") === 0) aviso("");
+      // Muestra debajo de tu frase cómo la recibieron los demás, y la guarda para el PDF
+      const trad = (r && r.trad) || {};
+      if (r && r.hora) entrada.hora = r.hora;
+      Object.keys(trad).forEach(cod => {
+        if (cod === sala.idioma || !IDIOMAS[cod] || !trad[cod]) return;
+        entrada.otros.push({ idioma: IDIOMAS[cod].nombre, texto: trad[cod] });
+        const o = document.createElement("div");
+        o.className = "orig";
+        o.textContent = trad[cod];
+        burbuja.appendChild(o);
+      });
+    })
     .catch(e => aviso("No se pudo enviar: " + e.message));
 }
 
@@ -1529,7 +1549,8 @@ function conversacionComoTexto(c) {
             "\nParticipantes: " + c.participantes.join(", ") + "\n\n";
   c.entradas.forEach(e => {
     if (e.tipo === "sistema") txt += "[" + hora(e.hora) + "] -- " + e.texto + " --\n";
-    else txt += "[" + hora(e.hora) + "] " + e.quien + ": " + e.texto + (e.original ? "\n      (Original: " + e.original + ")" : "") + "\n";
+    else txt += "[" + hora(e.hora) + "] " + e.quien + ": " + e.texto +
+                (e.otros || []).map(o => "\n      " + o.idioma + ": " + o.texto).join("") + "\n";
   });
   return txt + "\n© Ing. Luis Fuentes Robles – Todos los derechos reservados · Tel. +506 8880-8471\n";
 }
