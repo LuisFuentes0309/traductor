@@ -254,6 +254,7 @@
       </label>
     </div>
 
+    <p class="suave" id="estadoMic">&nbsp;</p>
     <p class="suave" id="interino">&nbsp;</p>
     <p class="suave" id="descartado"></p>
     <div id="registro" class="registro"></div>
@@ -474,6 +475,8 @@ const esIOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === "MacIntel"
 // Navegadores dentro de otras apps (WhatsApp, Facebook) o Samsung Internet no reconocen voz bien
 const navegadorProblematico = esAndroid && /SamsungBrowser|; wv\)|FBAN|FBAV|Instagram|Firefox|MiuiBrowser|HeyTap|OPR\//i.test(UA);
 const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+// En celulares se usa "toca para hablar / toca para enviar" (mantener presionado falla en Android)
+const esTactil = esAndroid || esIOS || (window.matchMedia && matchMedia("(pointer: coarse)").matches);
 
 // ---------- Clave de acceso (se recuerda en este navegador) ----------
 let claveAcceso = "";
@@ -681,10 +684,11 @@ $("btnDetener").addEventListener("click", detenerHabla);
 function mensajeErrorVoz(codigo) {
   switch (codigo) {
     case "not-allowed":
-    case "service-not-allowed":
-      return esAndroid
-        ? "Chrome no tiene permiso para el micrófono. En el teléfono ve a Ajustes → Aplicaciones → Chrome → Permisos → Micrófono → Permitir. Revisa también que la app \"Google\" esté instalada y activada (Ajustes → Aplicaciones → Google)."
+      return esTactil
+        ? "Chrome no dejó encender el micrófono para esta página. Toca el icono que está a la izquierda de la dirección (arriba) → Permisos → Micrófono → Permitir. Luego recarga la página."
         : "El navegador no dio permiso para el micrófono. Actívalo en el icono a la izquierda de la barra de direcciones.";
+    case "service-not-allowed":
+      return "El servicio de reconocimiento de voz del teléfono no respondió. Revisa que la app \"Google\" esté activada y actualizada en Play Store.";
     case "audio-capture":
       return "No se pudo usar el micrófono: otra app lo está usando (WhatsApp, grabadora, llamada). Ciérrala e inténtalo de nuevo.";
     case "network":
@@ -957,6 +961,10 @@ $("btnEntrar").addEventListener("click", () => {
 function entrarASalaUI() {
   if (sala.aceptado) return;
   sala.aceptado = true;
+  if (esTactil) {
+    $("modoMic").options[0].text = "Tocar para hablar (recomendado)";
+    $("ayudaMic").textContent = "Toca el botón una vez, espera a que se ponga rojo y habla. Cuando termines la frase, tócalo otra vez para enviarla.";
+  }
   mostrarPaso("pasoSala");
   $("infoAdmin").hidden = !sala.esAdmin;
   $("btnSalir").textContent = sala.esAdmin ? "⏹ Finalizar reunión" : "Salir de la sala";
@@ -1231,8 +1239,13 @@ function actualizarBotonMic() {
   let activo, texto;
   if (sala.modo === "presionar") {
     activo = sala.presionando;
-    if (!sala.presionando) texto = "🎙 Mantén presionado para hablar";
-    else texto = sala.escuchando ? "🔴 Escuchando… suelta para enviar" : "⏳ Preparando… espera el rojo";
+    if (esTactil) {
+      if (!sala.presionando) texto = "🎙 Toca para hablar";
+      else texto = sala.escuchando ? "🔴 Escuchando… toca para enviar" : "⏳ Preparando… espera el rojo";
+    } else {
+      if (!sala.presionando) texto = "🎙 Mantén presionado para hablar";
+      else texto = sala.escuchando ? "🔴 Escuchando… suelta para enviar" : "⏳ Preparando… espera el rojo";
+    }
   } else {
     activo = sala.micActivo;
     texto = sala.micActivo ? "🔴 Micrófono activo (toca para silenciar)" : "🎙 Activar micrófono";
@@ -1246,6 +1259,9 @@ function empezarAHablar() {
   if (sala.modo !== "presionar" || sala.presionando || !sala.aceptado) return;
   detenerHabla();          // si estaba sonando la voz del otro, se calla para escucharte
   sala.presionando = true;
+  clearTimeout(sala.limiteHabla);
+  if (esTactil) sala.limiteHabla = setTimeout(dejarDeHablar, 40000);
+  estadoMic("Micrófono: encendiendo…");
   iniciarReconocimiento();
   actualizarBotonMic();
 }
@@ -1253,6 +1269,7 @@ function empezarAHablar() {
 function dejarDeHablar() {
   if (!sala.presionando) return;
   sala.presionando = false;
+  clearTimeout(sala.limiteHabla);
   // stop() (no abort) para que el navegador entregue enseguida la frase completa
   if (sala.rec) { try { sala.rec.stop(); } catch (e) {} }
   actualizarBotonMic();
@@ -1260,16 +1277,26 @@ function dejarDeHablar() {
 
 const botonMic = $("btnMic");
 botonMic.addEventListener("pointerdown", e => {
-  if (sala.modo !== "presionar") return;
+  if (sala.modo !== "presionar" || esTactil) return;
   e.preventDefault();
   try { botonMic.setPointerCapture(e.pointerId); } catch (err) {}
   empezarAHablar();
 });
-botonMic.addEventListener("pointerup", dejarDeHablar);
-botonMic.addEventListener("pointercancel", dejarDeHablar);
-botonMic.addEventListener("lostpointercapture", dejarDeHablar);
+const soltarSiNoEsTactil = () => { if (!esTactil) dejarDeHablar(); };
+botonMic.addEventListener("pointerup", soltarSiNoEsTactil);
+botonMic.addEventListener("pointercancel", soltarSiNoEsTactil);
+botonMic.addEventListener("lostpointercapture", soltarSiNoEsTactil);
 botonMic.addEventListener("contextmenu", e => e.preventDefault());
-botonMic.addEventListener("click", () => { if (sala.modo === "libre") alternarManosLibres(); });
+botonMic.addEventListener("click", () => {
+  if (sala.modo === "libre") { alternarManosLibres(); return; }
+  if (!esTactil) return;
+  // Celular: un toque empieza, otro toque envía
+  if (sala.presionando) dejarDeHablar();
+  else empezarAHablar();
+});
+
+// Muestra qué está pasando con el micrófono (ayuda a encontrar fallas)
+function estadoMic(texto) { $("estadoMic").textContent = texto || " "; }
 
 document.addEventListener("keydown", e => {
   if (e.code !== "Space" || e.repeat || $("pasoSala").hidden || sala.modo !== "presionar") return;
@@ -1300,7 +1327,8 @@ function iniciarReconocimiento() {
   const rec = crearReconocedor(sala.idioma, sala.intentoIdioma);
   let errorGrave = false;
 
-  rec.onstart = () => { sala.escuchando = true; actualizarBotonMic(); };
+  rec.onstart = () => { sala.escuchando = true; estadoMic("Micrófono: escuchando (" + rec.lang + ")"); actualizarBotonMic(); };
+  rec.onspeechstart = () => estadoMic("Micrófono: te estoy oyendo 🎤");
 
   rec.onresult = e => {
     let interino = "";
@@ -1314,7 +1342,9 @@ function iniciarReconocimiento() {
   };
 
   rec.onerror = e => {
-    if (e.error === "no-speech" || e.error === "aborted") return;
+    if (e.error === "no-speech") { estadoMic("Micrófono: no se oyó nada, habla más cerca"); return; }
+    if (e.error === "aborted") return;
+    estadoMic("Micrófono: error " + e.error);
     if (e.error === "language-not-supported" && sala.intentoIdioma < IDIOMAS[sala.idioma].reconocimiento.length - 1) {
       sala.intentoIdioma++;       // prueba con otro acento del mismo idioma
       return;
@@ -1337,6 +1367,7 @@ function iniciarReconocimiento() {
       procesarFrase(t, 0);
     }
     $("interino").textContent = " ";
+    if (!sigueEscuchando() && !errorGrave) estadoMic("");
     actualizarBotonMic();
     // El navegador corta el reconocimiento cada cierto tiempo (en Android después de cada frase): se reabre solo
     if (!errorGrave && sigueEscuchando()) setTimeout(iniciarReconocimiento, esAndroid ? 120 : 250);
@@ -1344,7 +1375,11 @@ function iniciarReconocimiento() {
 
   sala.rec = rec;
   try { rec.start(); }
-  catch (e) { sala.rec = null; setTimeout(() => { if (sigueEscuchando()) iniciarReconocimiento(); }, 300); }
+  catch (e) {
+    sala.rec = null;
+    estadoMic("Micrófono: no arrancó (" + e.name + ")");
+    setTimeout(() => { if (sigueEscuchando()) iniciarReconocimiento(); }, 300);
+  }
 }
 
 function detenerReconocimiento() {
