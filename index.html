@@ -263,6 +263,7 @@
       <button id="btnEnviarTexto">Enviar</button>
     </div>
     <p class="suave" id="ayudaDictado">También puedes tocar este campo y usar el <b>micrófono 🎤 de tu teclado</b> para dictar; luego toca <b>Enviar</b>.</p>
+    <p class="suave" id="enlaceReintentarVoz" hidden><a href="#" id="btnReintentarVoz">Volver a probar el micrófono de Chrome</a></p>
     <p class="suave" id="estadoMic">&nbsp;</p>
     <p class="suave" id="interino">&nbsp;</p>
     <p class="suave" id="descartado"></p>
@@ -486,6 +487,15 @@ const navegadorProblematico = esAndroid && /SamsungBrowser|; wv\)|FBAN|FBAV|Inst
 const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
 // En celulares se usa "toca para hablar / toca para enviar" (mantener presionado falla en Android)
 const esTactil = esAndroid || esIOS || (window.matchMedia && matchMedia("(pointer: coarse)").matches);
+
+// Teléfonos donde el dictado de Chrome no recibe audio: el botón usa el dictado del teclado.
+// Se recuerda en este teléfono para no volver a intentarlo cada vez.
+let usarTeclado = false;
+try { usarTeclado = esAndroid && localStorage.getItem("vozPorTeclado") === "1"; } catch (e) {}
+function recordarModoTeclado(activar) {
+  usarTeclado = activar;
+  try { if (activar) localStorage.setItem("vozPorTeclado", "1"); else localStorage.removeItem("vozPorTeclado"); } catch (e) {}
+}
 
 // ---------- Clave de acceso (se recuerda en este navegador) ----------
 let claveAcceso = "";
@@ -725,12 +735,13 @@ function crearReconocedor(idioma, intentoIdioma) {
 function reconocerDurante(idioma, ms, alInterino) {
   return new Promise(resolve => {
     if (!Reconocimiento) return resolve({ texto: "", error: "no-soportado" });
-    let finales = "", interino = "", terminado = false, errorFinal = "", intentoIdioma = 0, rec = null;
+    let finales = "", interino = "", terminado = false, errorFinal = "", intentoIdioma = 0, rec = null, huboAudio = false;
     const fin = Date.now() + ms;
 
     const arrancar = () => {
       if (terminado) return;
       rec = crearReconocedor(idioma, intentoIdioma);
+      rec.onaudiostart = () => { huboAudio = true; };
       rec.onresult = e => {
         interino = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -760,7 +771,7 @@ function reconocerDurante(idioma, ms, alInterino) {
       terminado = true;
       clearTimeout(reloj);
       try { rec && rec.stop(); } catch (e) {}
-      setTimeout(() => resolve({ texto: (finales + interino).trim(), error: errorFinal }), 400);
+      setTimeout(() => resolve({ texto: (finales + interino).trim(), error: errorFinal, huboAudio: huboAudio }), 400);
     };
 
     const reloj = setTimeout(() => { try { rec && rec.stop(); } catch (e) {} setTimeout(cerrar, 1200); }, ms);
@@ -901,8 +912,12 @@ $("btnGrabar").addEventListener("click", async () => {
     }
 
     transcripcionPrueba = resultado.texto;
+    if (esAndroid) recordarModoTeclado(!resultado.huboAudio && !resultado.texto);
     if (transcripcionPrueba) {
       $("transcripcionPrueba").textContent = transcripcionPrueba;
+    } else if (usarTeclado) {
+      $("transcripcionPrueba").textContent = "(este teléfono usará el dictado del teclado)";
+      aviso("Tu micrófono graba bien. En este teléfono, el botón \"Toca para hablar\" de la sala abrirá el teclado: toca su 🎤, habla y luego toca Enviar.");
     } else {
       $("transcripcionPrueba").textContent = "(no se entendió nada)";
       if (esAndroid) aviso("Tu micrófono graba bien, pero el dictado de Chrome no responde en este teléfono. No te preocupes: dentro de la sala podrás dictar con el micrófono 🎤 de tu teclado o escribir.");
@@ -975,6 +990,7 @@ function entrarASalaUI() {
     $("modoMic").options[0].text = "Tocar para hablar (recomendado)";
     $("ayudaMic").textContent = "Toca el botón una vez, espera a que se ponga rojo y habla. Cuando termines la frase, tócalo otra vez para enviarla.";
   }
+  ajustarTextosModoTeclado();
   mostrarPaso("pasoSala");
   $("infoAdmin").hidden = !sala.esAdmin;
   $("btnSalir").textContent = sala.esAdmin ? "⏹ Finalizar reunión" : "Salir de la sala";
@@ -1306,6 +1322,7 @@ botonMic.addEventListener("contextmenu", e => e.preventDefault());
 botonMic.addEventListener("click", () => {
   if (sala.modo === "libre") { alternarManosLibres(); return; }
   if (!esTactil) return;
+  if (usarTeclado) { abrirDictadoTeclado(); return; }
   // Celular: un toque empieza, otro toque envía
   if (sala.presionando) dejarDeHablar();
   else empezarAHablar();
@@ -1455,25 +1472,46 @@ function enviarTextoManual() {
   if (!texto || !sala.aceptado) return;
   campo.value = "";
   enviarFrase(texto);
+  if (esTactil) campo.focus();     // el teclado queda abierto para la siguiente frase
 }
 $("btnEnviarTexto").addEventListener("click", enviarTextoManual);
+$("btnReintentarVoz").addEventListener("click", e => {
+  e.preventDefault();
+  recordarModoTeclado(false);
+  $("enlaceReintentarVoz").hidden = true;
+  $("ayudaDictado").hidden = false;
+  $("ayudaMic").textContent = "Toca el botón una vez, espera a que se ponga rojo y habla. Cuando termines la frase, tócalo otra vez para enviarla.";
+  estadoMic("Listo: toca \"Toca para hablar\" para probar de nuevo");
+});
 $("textoManual").addEventListener("keydown", e => {
   if (e.key === "Enter") { e.preventDefault(); enviarTextoManual(); }
 });
 
-// Si el dictado de Chrome no funciona en este teléfono, se ofrece el del teclado
-let falloVozAvisado = false;
+// Abre el teclado listo para dictar
+function abrirDictadoTeclado() {
+  const campo = $("textoManual");
+  campo.focus();
+  campo.scrollIntoView({ block: "center", behavior: "smooth" });
+  estadoMic("✍️ Toca el 🎤 de tu teclado, habla y luego toca Enviar");
+}
+
+// Si el dictado de Chrome no funciona en este teléfono, se pasa al del teclado y se recuerda
 function vozDeChromeNoFunciona() {
   sala.presionando = false;
   sala.micActivo = false;
   detenerReconocimiento();
+  recordarModoTeclado(true);
+  ajustarTextosModoTeclado();
   actualizarBotonMic();
-  estadoMic("Micrófono: Chrome no recibe audio en este teléfono");
-  if (!falloVozAvisado) {
-    falloVozAvisado = true;
-    aviso("El dictado de Chrome no funciona en este teléfono. Usa el campo de texto: tócalo y presiona el micrófono 🎤 de tu teclado para dictar, luego toca Enviar.");
+  abrirDictadoTeclado();
+}
+
+function ajustarTextosModoTeclado() {
+  $("enlaceReintentarVoz").hidden = !usarTeclado;
+  if (usarTeclado) {
+    $("ayudaMic").textContent = "Toca el botón: se abrirá tu teclado. Toca su micrófono 🎤, habla y luego toca Enviar.";
+    $("ayudaDictado").hidden = true;
   }
-  $("textoManual").focus();
 }
 
 function enviarFrase(texto) {
