@@ -60,6 +60,9 @@
   .nivel{ position:relative; height:10px; background:#e3e3e3; border-radius:5px; margin:10px 0; max-width:420px; overflow:hidden; }
   #nivelBarra{ height:100%; width:0; background:#9e9e9e; }
   #nivelUmbral{ position:absolute; top:0; bottom:0; width:2px; background:#c62828; left:15%; }
+  .dictado{ display:flex; gap:8px; align-items:center; max-width:620px; margin:8px 0; }
+  .dictado input{ flex:1; min-width:0; padding:12px; font-size:16px; border:2px solid #1565C0; border-radius:6px; }
+  .dictado button{ margin:0; }
   .registro{ border:1px solid #e3e3e3; border-radius:8px; height:300px; overflow-y:auto; padding:10px; background:#fafafa; }
   .msg{ margin:8px 0; padding:8px 12px; border-radius:8px; max-width:80%; }
   .msg.mio{ background:#e3edf9; margin-left:auto; }
@@ -254,6 +257,12 @@
       </label>
     </div>
 
+    <div class="dictado">
+      <input type="text" id="textoManual" enterkeyhint="send" autocomplete="off"
+             placeholder="Escribe o dicta con el 🎤 del teclado">
+      <button id="btnEnviarTexto">Enviar</button>
+    </div>
+    <p class="suave" id="ayudaDictado">También puedes tocar este campo y usar el <b>micrófono 🎤 de tu teclado</b> para dictar; luego toca <b>Enviar</b>.</p>
     <p class="suave" id="estadoMic">&nbsp;</p>
     <p class="suave" id="interino">&nbsp;</p>
     <p class="suave" id="descartado"></p>
@@ -896,7 +905,8 @@ $("btnGrabar").addEventListener("click", async () => {
       $("transcripcionPrueba").textContent = transcripcionPrueba;
     } else {
       $("transcripcionPrueba").textContent = "(no se entendió nada)";
-      aviso(resultado.error ? mensajeErrorVoz(resultado.error) : "No se escuchó nada. Habla más cerca del micrófono e inténtalo otra vez.");
+      if (esAndroid) aviso("Tu micrófono graba bien, pero el dictado de Chrome no responde en este teléfono. No te preocupes: dentro de la sala podrás dictar con el micrófono 🎤 de tu teclado o escribir.");
+      else aviso(resultado.error ? mensajeErrorVoz(resultado.error) : "No se escuchó nada. Habla más cerca del micrófono e inténtalo otra vez.");
     }
   } catch (e) {
     $("transcripcionPrueba").textContent = "—";
@@ -1333,7 +1343,15 @@ function iniciarReconocimiento() {
   const rec = crearReconocedor(sala.idioma, sala.intentoIdioma);
   let errorGrave = false;
 
-  rec.onstart = () => { sala.escuchando = true; estadoMic("Micrófono: escuchando (" + rec.lang + ")"); actualizarBotonMic(); };
+  let llegoAudio = false, vigilante = null;
+  rec.onstart = () => {
+    sala.escuchando = true;
+    estadoMic("Micrófono: escuchando (" + rec.lang + ")");
+    actualizarBotonMic();
+    // En Android a veces Chrome "escucha" pero nunca recibe audio
+    if (esAndroid) vigilante = setTimeout(() => { if (!llegoAudio && sala.rec === rec) vozDeChromeNoFunciona(); }, 4000);
+  };
+  rec.onaudiostart = () => { llegoAudio = true; sala.vozFunciona = true; };
   rec.onspeechstart = () => estadoMic("Micrófono: te estoy oyendo 🎤");
 
   rec.onresult = e => {
@@ -1351,6 +1369,12 @@ function iniciarReconocimiento() {
     if (e.error === "no-speech") { estadoMic("Micrófono: no se oyó nada, habla más cerca"); return; }
     if (e.error === "aborted") return;
     estadoMic("Micrófono: error " + e.error);
+    if (esAndroid && !sala.vozFunciona && (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "audio-capture")) {
+      clearTimeout(vigilante);
+      errorGrave = true;
+      vozDeChromeNoFunciona();
+      return;
+    }
     if (e.error === "language-not-supported" && sala.intentoIdioma < IDIOMAS[sala.idioma].reconocimiento.length - 1) {
       sala.intentoIdioma++;       // prueba con otro acento del mismo idioma
       return;
@@ -1364,6 +1388,8 @@ function iniciarReconocimiento() {
   };
 
   rec.onend = () => {
+    clearTimeout(vigilante);
+    if (sala.rec !== rec && sala.rec !== null) return;
     sala.rec = null;
     sala.escuchando = false;
     // Si soltaste el botón antes de que el navegador confirmara la frase, se envía igual
@@ -1420,6 +1446,34 @@ function procesarFrase(texto, confianza) {
 
   $("descartado").textContent = "";
   enviarFrase(texto);
+}
+
+// ---------- Texto escrito o dictado con el teclado ----------
+function enviarTextoManual() {
+  const campo = $("textoManual");
+  const texto = campo.value.trim();
+  if (!texto || !sala.aceptado) return;
+  campo.value = "";
+  enviarFrase(texto);
+}
+$("btnEnviarTexto").addEventListener("click", enviarTextoManual);
+$("textoManual").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); enviarTextoManual(); }
+});
+
+// Si el dictado de Chrome no funciona en este teléfono, se ofrece el del teclado
+let falloVozAvisado = false;
+function vozDeChromeNoFunciona() {
+  sala.presionando = false;
+  sala.micActivo = false;
+  detenerReconocimiento();
+  actualizarBotonMic();
+  estadoMic("Micrófono: Chrome no recibe audio en este teléfono");
+  if (!falloVozAvisado) {
+    falloVozAvisado = true;
+    aviso("El dictado de Chrome no funciona en este teléfono. Usa el campo de texto: tócalo y presiona el micrófono 🎤 de tu teclado para dictar, luego toca Enviar.");
+  }
+  $("textoManual").focus();
 }
 
 function enviarFrase(texto) {
