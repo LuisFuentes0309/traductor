@@ -5,7 +5,7 @@
   Tel. +506 8880-8471
   Prohibida su copia, modificación o distribución sin autorización.
 -->
-<html>
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,27 +24,39 @@
   .columnas{ display:flex; gap:20px; }
   .col{ flex:1; }
   textarea{ width:100%; height:250px; resize:none; padding:10px; font-size:17px; box-sizing:border-box; }
-  select, input[type=text]{ padding:8px; font-size:15px; }
+  select, input[type=text]{ padding:8px; font-size:15px; max-width:100%; }
   button{ padding:10px 20px; margin:5px; cursor:pointer; border:none; border-radius:5px; background:#1565C0; color:#fff; font-size:15px; }
   button:hover{ background:#0D47A1; }
   button:disabled{ background:#9e9e9e; cursor:default; }
   button.secundario{ background:#e0e0e0; color:#333; }
   button.secundario:hover{ background:#cfcfcf; }
+  button.peligro{ background:#c62828; }
+  button.peligro:hover{ background:#8e0000; }
+  button.verde{ background:#2e7d32; }
+  button.verde:hover{ background:#1b5e20; }
   button.icono{ padding:6px 12px; font-size:18px; }
+  button.mini{ padding:2px 8px; margin:0 0 0 6px; font-size:13px; background:#fff; color:#c62828; border:1px solid #c62828; }
   .velocidad{ width:150px; }
   .suave{ color:#777; font-size:14px; font-weight:normal; }
   .tarjeta{ border:1px solid #e3e3e3; border-radius:8px; padding:15px; margin-bottom:15px; }
   .formulario label{ display:block; margin:12px 0 4px; font-weight:bold; }
   .aviso{ background:#fff3e0; border-left:4px solid #ef6c00; padding:10px; border-radius:4px; }
+  .alerta{ background:#ffebee; border-left:4px solid #c62828; padding:10px; border-radius:4px; margin-bottom:12px; }
   .encabezadoSala{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
   .encabezadoSala input{ flex:1; min-width:200px; }
-  .participantes{ display:flex; flex-wrap:wrap; gap:8px; margin:15px 0; }
-  .chip{ background:#e3edf9; color:#0D47A1; padding:6px 12px; border-radius:20px; font-size:14px; }
+  .participantes{ display:flex; flex-wrap:wrap; gap:8px; margin:15px 0; align-items:center; }
+  .chip{ background:#e3edf9; color:#0D47A1; padding:6px 12px; border-radius:20px; font-size:14px; display:inline-flex; align-items:center; }
   .chip.yo{ background:#1565C0; color:#fff; }
-  .mic{ font-size:18px; padding:14px 28px; }
+  .solicitudes{ background:#fff8e1; border:2px solid #ffb300; border-radius:8px; padding:10px 14px; margin:10px 0; }
+  .solicitud{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:4px 0; }
+  .solicitud span{ flex:1; min-width:140px; }
+  .solicitud button{ margin:0; padding:8px 14px; }
+  .barra label{ max-width:100%; }
+  .espera{ text-align:center; padding:30px 10px; }
+  .espera .reloj{ font-size:48px; }
+  .mic{ font-size:18px; padding:16px 20px; width:100%; max-width:420px; margin:5px 0; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:none; }
   .mic.activo{ background:#c62828; }
   .mic.activo:hover{ background:#8e0000; }
-  .mic{ user-select:none; -webkit-user-select:none; touch-action:none; min-width:320px; }
   .nivel{ position:relative; height:10px; background:#e3e3e3; border-radius:5px; margin:10px 0; max-width:420px; overflow:hidden; }
   #nivelBarra{ height:100%; width:0; background:#9e9e9e; }
   #nivelUmbral{ position:absolute; top:0; bottom:0; width:2px; background:#c62828; left:15%; }
@@ -52,16 +64,22 @@
   .msg{ margin:8px 0; padding:8px 12px; border-radius:8px; max-width:80%; }
   .msg.mio{ background:#e3edf9; margin-left:auto; }
   .msg.otro{ background:#fff; border:1px solid #e3e3e3; }
+  .msg.sis{ max-width:100%; text-align:center; color:#777; font-size:13px; font-style:italic; padding:2px; }
   .msg .quien{ font-size:12px; color:#777; margin-bottom:3px; }
   .msg .orig{ font-size:13px; color:#888; margin-top:4px; font-style:italic; }
   .pie{ text-align:center; color:#777; font-size:13px; margin-top:25px; padding-top:15px; border-top:1px solid #e3e3e3; }
   .pie a{ color:#1565C0; text-decoration:none; }
-  #pantallaClave{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:10; padding:16px; }
-  #pantallaClave[hidden]{ display:none; }
-  #pantallaClave .caja{ background:#fff; border-radius:10px; padding:25px; max-width:360px; width:100%; text-align:center; box-shadow:0 0 20px rgba(0,0,0,.3); }
-  #pantallaClave input{ width:100%; box-sizing:border-box; padding:10px; font-size:16px; margin:12px 0; }
+  .capa{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:10; padding:16px; }
+  .capa[hidden]{ display:none; }
+  .capa .caja{ background:#fff; border-radius:10px; padding:25px; max-width:380px; width:100%; text-align:center; box-shadow:0 0 20px rgba(0,0,0,.3); box-sizing:border-box; }
+  #campoClave{ width:100%; box-sizing:border-box; padding:10px; font-size:16px; margin:12px 0; }
   #errorClave{ color:#c62828; font-size:14px; min-height:18px; }
-  @media (max-width:700px){ body{ margin:10px; } .columnas{ flex-direction:column; } }
+  @media (max-width:700px){
+    body{ margin:8px; }
+    .contenedor{ padding:15px; }
+    .columnas{ flex-direction:column; }
+    .msg{ max-width:92%; }
+  }
 </style>
 </head>
 <body>
@@ -82,7 +100,7 @@
     <label>De <select id="origen"></select></label>
     <button class="icono" id="btnIntercambiar" title="Intercambiar idiomas">⇄</button>
     <label>A <select id="destino"></select></label>
-    <label>Voz
+    <label id="labelGenero">Voz
       <select id="genero">
         <option value="mujer">Mujer</option>
         <option value="hombre">Hombre</option>
@@ -118,6 +136,8 @@
 <!-- ============================== SALA ============================== -->
 <section id="vistaSala" hidden>
 
+  <div id="avisoNavegador" class="alerta" hidden></div>
+
   <!-- Paso 1: datos -->
   <div id="pasoDatos" class="formulario">
     <h3>Entrar a una sala</h3>
@@ -133,7 +153,7 @@
       <option value="mujer">Mujer</option>
     </select>
 
-    <label for="codigoSala">Código de sala <span class="suave">(déjalo vacío para crear una nueva)</span></label>
+    <label for="codigoSala">Código de sala <span class="suave">(déjalo vacío para crear una nueva; tú serás el administrador)</span></label>
     <input type="text" id="codigoSala" maxlength="8" placeholder="Ej. K7P2Q" style="text-transform:uppercase">
 
     <br><br>
@@ -146,7 +166,7 @@
 
     <div class="tarjeta">
       <b>1. Tu voz real</b>
-      <p class="suave">Graba 5 segundos hablando en tu idioma. Luego escúchate y revisa cómo te entendió el sistema.</p>
+      <p class="suave" id="textoPrueba1">Graba 5 segundos hablando en tu idioma. Luego escúchate y revisa cómo te entendió el sistema.</p>
       <button id="btnGrabar">🎙 Grabar 5 segundos</button>
       <span id="cuentaAtras" class="suave"></span>
       <div><audio id="audioPrueba" controls hidden></audio></div>
@@ -158,7 +178,7 @@
       <p class="suave">Así te escucharán los demás. Se usa lo que grabaste (o una frase de ejemplo) traducido al idioma que elijas.</p>
       <div class="barra">
         <label>Idioma de prueba <select id="idiomaPrueba"></select></label>
-        <label>Voz
+        <label id="labelGeneroPrueba">Voz
           <select id="generoPrueba">
             <option value="hombre">Hombre</option>
             <option value="mujer">Mujer</option>
@@ -167,11 +187,22 @@
         <button id="btnEscucharAsignada">🔊 Escuchar</button>
       </div>
       <p id="vozPruebaInfo" class="suave"></p>
-      <p class="suave">Nota: cada persona escucha con las voces instaladas en su propio navegador, así que en otro equipo la voz puede variar un poco.</p>
+      <p class="suave">Nota: cada persona escucha con las voces instaladas en su propio teléfono o computadora, así que en otro equipo la voz puede variar un poco.</p>
     </div>
 
     <button id="btnVolverDatos" class="secundario">← Atrás</button>
     <button id="btnEntrar">✅ Suena bien, entrar a la sala</button>
+  </div>
+
+  <!-- Paso 2b: esperando aprobación del administrador -->
+  <div id="pasoEspera" hidden>
+    <div class="espera">
+      <div class="reloj">⏳</div>
+      <h3>Solicitud enviada</h3>
+      <p>Esperando que el administrador de la sala <b id="codigoEsperaTxt"></b> apruebe tu ingreso…</p>
+      <p class="suave">No cierres esta página.</p>
+      <button id="btnCancelarEspera" class="secundario">Cancelar</button>
+    </div>
   </div>
 
   <!-- Paso 3: la sala -->
@@ -181,13 +212,19 @@
       <input type="text" id="enlaceSala" readonly>
       <button id="btnCopiar" class="secundario">Copiar enlace</button>
     </div>
+    <p class="suave" id="infoAdmin" hidden>⭐ Eres el administrador: cada persona que abra el enlace necesita tu aprobación para entrar.</p>
+
+    <div id="panelSolicitudes" class="solicitudes" hidden>
+      <b>🔔 Quieren entrar a la sala:</b>
+      <div id="listaSolicitudes"></div>
+    </div>
 
     <div id="listaParticipantes" class="participantes"></div>
 
     <div class="barra">
       <label>Modo
         <select id="modoMic">
-          <option value="presionar">Mantener presionado para hablar (recomendado)</option>
+          <option value="presionar">Presionar para hablar (recomendado)</option>
           <option value="libre">Manos libres</option>
         </select>
       </label>
@@ -198,20 +235,19 @@
           <option value="1.3">Muy rápida</option>
         </select>
       </label>
-      <button id="btnSalir" class="secundario">Salir de la sala</button>
     </div>
 
     <button id="btnMic" class="mic">🎙 Mantén presionado para hablar</button>
-    <div class="nivel" title="Volumen de tu micrófono"><div id="nivelBarra"></div><div id="nivelUmbral"></div></div>
-    <p class="suave" id="ayudaMic">También puedes mantener presionada la <b>barra espaciadora</b>. Suelta medio segundo después de terminar la frase.</p>
+    <div class="nivel" id="nivel" title="Volumen de tu micrófono"><div id="nivelBarra"></div><div id="nivelUmbral"></div></div>
+    <p class="suave" id="ayudaMic">Mantén presionado el botón (o la <b>barra espaciadora</b> en computadora), espera a que se ponga rojo, habla y suelta medio segundo después de terminar la frase.</p>
 
     <div id="opcionesLibre" hidden>
-      <label class="suave">Filtro de ruido:
+      <label class="suave" id="filtroRuido">Filtro de ruido:
         <input type="range" id="umbral" min="0" max="60" value="15">
         <span id="umbralTxt">15</span>
         (sube este valor si se traducen ruidos; la barra debe pasar la línea roja solo cuando hablas)
       </label>
-      <br>
+      <p class="suave" id="notaAndroidLibre" hidden>En Android el filtro se hace con la seguridad del reconocimiento: las frases dudosas se ignoran.</p>
       <label class="suave">
         <input type="checkbox" id="chkAudifonos">
         Uso audífonos (no pausar mi micrófono mientras se reproduce la voz de los demás)
@@ -221,6 +257,9 @@
     <p class="suave" id="interino">&nbsp;</p>
     <p class="suave" id="descartado"></p>
     <div id="registro" class="registro"></div>
+
+    <br>
+    <button id="btnSalir" class="secundario">Salir de la sala</button>
   </div>
 
   <p id="avisoSala" class="aviso" hidden></p>
@@ -234,7 +273,7 @@
 </div>
 
 <!-- Pantalla de clave de acceso -->
-<div id="pantallaClave" hidden>
+<div id="pantallaClave" class="capa" hidden>
   <form class="caja" id="formClave">
     <h3 style="margin-top:0">🔒 Acceso restringido</h3>
     <p class="suave">Escribe la clave de acceso que te dio el administrador.</p>
@@ -245,43 +284,56 @@
   </form>
 </div>
 
+<!-- Ventana para descargar la conversación -->
+<div id="modalFin" class="capa" hidden>
+  <div class="caja">
+    <h3 style="margin-top:0" id="modalTitulo">La reunión terminó</h3>
+    <p id="modalTexto">¿Quieres descargar lo que se conversó?</p>
+    <button id="btnPdf" class="verde">📄 Descargar conversación (PDF)</button>
+    <p class="suave" id="modalEstado"></p>
+    <button id="btnCerrarModal" class="secundario">Cerrar</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+
 <script>
 // =====================================================================
 //  Idiomas y selección automática de voces por idioma + género
 // =====================================================================
 
-// locale: acento con el que se habla   reconocimiento: acento que se escucha por el micrófono
+// locale: acento con el que se habla   reconocimiento: acentos que se escuchan por el micrófono (en orden)
 const IDIOMAS = {
-  es: { nombre: "Español",   locale: "es-MX", reconocimiento: "es-CR" },
-  en: { nombre: "Inglés",    locale: "en-US", reconocimiento: "en-US" },
-  fr: { nombre: "Francés",   locale: "fr-FR", reconocimiento: "fr-FR" },
-  de: { nombre: "Alemán",    locale: "de-DE", reconocimiento: "de-DE" },
-  it: { nombre: "Italiano",  locale: "it-IT", reconocimiento: "it-IT" },
-  pt: { nombre: "Portugués", locale: "pt-BR", reconocimiento: "pt-BR" },
-  ja: { nombre: "Japonés",   locale: "ja-JP", reconocimiento: "ja-JP" }
+  es: { nombre: "Español",   locale: "es-MX", reconocimiento: ["es-CR", "es-MX", "es-ES"] },
+  en: { nombre: "Inglés",    locale: "en-US", reconocimiento: ["en-US", "en-GB"] },
+  fr: { nombre: "Francés",   locale: "fr-FR", reconocimiento: ["fr-FR"] },
+  de: { nombre: "Alemán",    locale: "de-DE", reconocimiento: ["de-DE"] },
+  it: { nombre: "Italiano",  locale: "it-IT", reconocimiento: ["it-IT"] },
+  pt: { nombre: "Portugués", locale: "pt-BR", reconocimiento: ["pt-BR", "pt-PT"] },
+  ja: { nombre: "Japonés",   locale: "ja-JP", reconocimiento: ["ja-JP"] }
 };
 
 // El navegador no dice si una voz es de hombre o de mujer, así que se deduce por el nombre
 const NOMBRES_HOMBRE = new Set([
   "raul","pablo","jorge","juan","diego","alvaro","alonso","gerardo","carlos","enrique",
   "david","mark","guy","george","ryan","christopher","eric","roger","steffan","andrew","brian",
-  "thomas","alex","fred","daniel","tom","aaron","arthur","oliver",
-  "paul","henri","remy","claude","jacques",
+  "thomas","alex","fred","daniel","tom","aaron","arthur","oliver","reed","rocko","grandpa",
+  "paul","henri","remy","claude","jacques","thomas",
   "stefan","conrad","killian","florian","yannick","markus",
-  "cosimo","giuseppe","luca","benigno",
+  "cosimo","giuseppe","luca","benigno","diego",
   "antonio","duarte","felipe",
-  "ichiro","keita","otoya","takumi","daichi"
+  "ichiro","keita","otoya","takumi","daichi","hattori"
 ]);
 
 const NOMBRES_MUJER = new Set([
   "sabina","helena","laura","elvira","dalia","paloma","monica","paulina","marisol","renata","lucia",
   "zira","aria","jenny","michelle","ana","emma","ava","hazel","susan","sonia","libby","maisie",
-  "samantha","victoria","karen","moira","tessa","fiona","serena","allison","ava",
-  "hortense","julie","denise","eloise","vivienne","amelie","audrey",
+  "samantha","victoria","karen","moira","tessa","fiona","serena","allison","flo","sandy","shelley","grandma",
+  "hortense","julie","denise","eloise","vivienne","amelie","audrey","amelie","marie",
   "hedda","katja","amala","seraphina","anna","petra",
   "elsa","isabella","alice","federica","paola",
   "maria","francisca","thalita","luciana","joana",
-  "haruka","ayumi","sayaka","nanami","kyoko","aoi","mayu"
+  "haruka","ayumi","sayaka","nanami","kyoko","aoi","mayu","o-ren"
 ]);
 
 let todasLasVoces = [];
@@ -294,10 +346,11 @@ speechSynthesis.onvoiceschanged = cargarTodasLasVoces;
 cargarTodasLasVoces();
 
 function generoDeVoz(voz) {
+  if (!voz) return null;
   const nombre = voz.name.toLowerCase();
   if (/female|mujer|femenin/.test(nombre)) return "mujer";
   if (/\bmale\b|hombre|masculin/.test(nombre)) return "hombre";
-  const palabras = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z]+/);
+  const palabras = nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").split(/[^a-z-]+/);
   for (const p of palabras) {
     if (NOMBRES_HOMBRE.has(p)) return "hombre";
     if (NOMBRES_MUJER.has(p)) return "mujer";
@@ -311,10 +364,26 @@ function normalizarLang(lang) {
   return String(lang || "").replace("_", "-").toLowerCase();
 }
 
+function vocesDelIdioma(idioma) {
+  return todasLasVoces.filter(v => normalizarLang(v.lang).startsWith(idioma));
+}
+
+// Qué géneros de voz existen en este equipo para un idioma
+function generosDisponibles(idioma) {
+  const g = new Set();
+  vocesDelIdioma(idioma).forEach(v => { const x = generoDeVoz(v); if (x) g.add(x); });
+  return g;
+}
+
+function hayAmbosGeneros(idioma) {
+  const g = generosDisponibles(idioma);
+  return g.has("hombre") && g.has("mujer");
+}
+
 // Devuelve la mejor voz nativa del idioma, priorizando el género pedido
 function elegirVoz(idioma, genero) {
   const localePreferido = IDIOMAS[idioma].locale.toLowerCase();
-  const candidatas = todasLasVoces.filter(v => normalizarLang(v.lang).startsWith(idioma));
+  const candidatas = vocesDelIdioma(idioma);
   if (!candidatas.length) return { voz: null, generoOk: false };
 
   let mejor = null, mejorPuntaje = -1;
@@ -333,9 +402,13 @@ function elegirVoz(idioma, genero) {
 
 function describirVoz(idioma, genero) {
   const r = elegirVoz(idioma, genero);
-  if (!r.voz) return IDIOMAS[idioma].nombre + ": no hay voces instaladas en este navegador";
+  if (!r.voz) return IDIOMAS[idioma].nombre + ": no hay voces instaladas en este equipo";
   let txt = IDIOMAS[idioma].nombre + ": " + r.voz.name;
-  if (!r.generoOk) txt += " (no hay voz de " + genero + " para este idioma en este navegador)";
+  if (!r.generoOk) {
+    const g = [...generosDisponibles(idioma)];
+    if (g.length === 1) txt += " (en este equipo solo hay voz de " + g[0] + " para este idioma)";
+    else txt += " (no hay voz de " + genero + " para este idioma en este equipo)";
+  }
   return txt;
 }
 
@@ -374,7 +447,7 @@ function hablar(texto, idioma, genero, velocidad) {
       if (miTurno !== turnoHabla || i >= trozos.length) return resolve();
       const u = new SpeechSynthesisUtterance(trozos[i++]);
       u.lang = voz ? voz.lang : IDIOMAS[idioma].locale;
-      if (voz) u.voice = voz;
+      if (voz) { try { u.voice = voz; } catch (e) {} }
       u.rate = velocidad || 1;
       u.onend = siguiente;
       u.onerror = siguiente;
@@ -391,12 +464,17 @@ function detenerHabla() {
 </script>
 
 <script>
-// ⚠️ Pega aquí la URL de tu implementación de Apps Script (la que termina en /exec)
-const URL_API = "https://script.google.com/macros/s/AKfycbxuNW-Ibl03IdLrP9c0C7FOJ5HMERoFlERlBrQZZ-bka5pXBchoYdMnYM5zWUgiGmEu/exec";
-
 const $ = id => document.getElementById(id);
+const URL_SERVIDOR = (typeof URL_API === "string") ? URL_API : "";
 
-// Llama a una función de Code.gs y devuelve su resultado
+// ---------- Tipo de equipo y navegador ----------
+const UA = navigator.userAgent;
+const esAndroid = /Android/i.test(UA);
+const esIOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+// Navegadores dentro de otras apps (WhatsApp, Facebook) o Samsung Internet no reconocen voz bien
+const navegadorProblematico = esAndroid && /SamsungBrowser|; wv\)|FBAN|FBAV|Instagram|Firefox|MiuiBrowser|HeyTap|OPR\//i.test(UA);
+const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+
 // ---------- Clave de acceso (se recuerda en este navegador) ----------
 let claveAcceso = "";
 try { claveAcceso = localStorage.getItem("claveTraductor") || ""; } catch (e) {}
@@ -413,17 +491,16 @@ function mostrarPantallaClave(mensaje) {
   setTimeout(() => $("campoClave").focus(), 50);
 }
 
-// Si Google responde con una página de error en vez de datos, reintenta hasta 3 veces
+// Llama a una función de Code.gs. Si Google responde con una página de error, reintenta hasta 3 veces.
 async function servidor(accion, ...args) {
   let ultimoError = null;
   for (let intento = 0; intento < 3; intento++) {
     try {
-      // Si el servidor no contesta en 15 s, se corta y se reintenta
       const control = new AbortController();
-      const limite = setTimeout(() => control.abort(), 15000);
+      const limite = setTimeout(() => control.abort(), accion === "generarPdf" ? 45000 : 15000);
       let texto;
       try {
-        const r = await fetch(URL_API, {
+        const r = await fetch(URL_SERVIDOR, {
           method: "POST",
           body: JSON.stringify({ accion: accion, args: args, clave: claveAcceso }),
           signal: control.signal
@@ -455,7 +532,6 @@ async function servidor(accion, ...args) {
   }
   throw new Error("el servidor de Google no respondió (" + ultimoError.message + "). Intenta de nuevo.");
 }
-const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 // ---------- Llenar listas de idiomas ----------
 function llenarIdiomas(select, porDefecto) {
@@ -480,7 +556,7 @@ function mostrarVista(id) {
 }
 document.querySelectorAll(".pestana").forEach(b => b.addEventListener("click", () => mostrarVista(b.dataset.vista)));
 
-// Si se abrió con ?sala=CODIGO, ir directo a la sala
+// ---------- Pantalla de clave ----------
 $("formClave").addEventListener("submit", e => {
   e.preventDefault();
   const intento = $("campoClave").value.trim();
@@ -495,16 +571,37 @@ $("formClave").addEventListener("submit", e => {
       if (!$("pantallaClave").hidden) $("errorClave").textContent = err.message === "Se necesita la clave de acceso." ? "Clave incorrecta." : err.message;
     });
 });
-if (!claveAcceso) mostrarPantallaClave();
 
+if (!URL_SERVIDOR || URL_SERVIDOR.indexOf("PEGA_AQUI") === 0) {
+  alert("Falta configurar el archivo config.js con la URL /exec de Apps Script.");
+} else if (!claveAcceso) {
+  mostrarPantallaClave();
+}
+
+// Si se abrió con ?sala=CODIGO, ir directo a la sala
 const codigoEnUrl = new URLSearchParams(location.search).get("sala");
 if (codigoEnUrl) {
   $("codigoSala").value = codigoEnUrl.toUpperCase();
   mostrarVista("vistaSala");
 }
-if (URL_API.indexOf("PEGA_AQUI") === 0) {
-  alert("Falta configurar URL_API en index.html con la URL /exec de Apps Script.");
-}
+
+// Aviso si el navegador no sirve para hablar en la sala
+(function revisarNavegador() {
+  let html = "";
+  if (navegadorProblematico || (!Reconocimiento && esAndroid)) {
+    const destino = location.host + location.pathname + location.search;
+    html = "⚠️ Este navegador no puede escuchar tu voz. Abre la página en <b>Google Chrome</b>.<br>" +
+           '<button id="btnAbrirChrome" type="button">Abrir en Chrome</button>';
+    $("avisoNavegador").innerHTML = html;
+    $("avisoNavegador").hidden = false;
+    $("btnAbrirChrome").addEventListener("click", () => {
+      location.href = "intent://" + destino + "#Intent;scheme=https;package=com.android.chrome;end";
+    });
+  } else if (!Reconocimiento) {
+    $("avisoNavegador").innerHTML = "⚠️ Este navegador no puede escuchar tu voz. Usa <b>Google Chrome</b> o <b>Microsoft Edge</b> en computadora o Android, o <b>Safari</b> en iPhone.";
+    $("avisoNavegador").hidden = false;
+  }
+})();
 
 // =====================================================================
 //  TRADUCTOR
@@ -542,6 +639,8 @@ function traducirAhora() {
 }
 
 function actualizarInfoVoces() {
+  // El selector Hombre/Mujer solo aparece si hay ambas voces para alguno de los dos idiomas
+  $("labelGenero").hidden = !(hayAmbosGeneros($("origen").value) || hayAmbosGeneros($("destino").value));
   const g = $("genero").value;
   $("infoVoces").textContent =
     "🔊 Original → " + describirVoz($("origen").value, g) +
@@ -575,15 +674,99 @@ $("btnContinuar").addEventListener("click", () => speechSynthesis.resume());
 $("btnDetener").addEventListener("click", detenerHabla);
 
 // =====================================================================
+//  RECONOCIMIENTO DE VOZ (común para la prueba y la sala)
+// =====================================================================
+
+// Explica en palabras simples por qué no se pudo escuchar
+function mensajeErrorVoz(codigo) {
+  switch (codigo) {
+    case "not-allowed":
+    case "service-not-allowed":
+      return esAndroid
+        ? "Chrome no tiene permiso para el micrófono. En el teléfono ve a Ajustes → Aplicaciones → Chrome → Permisos → Micrófono → Permitir. Revisa también que la app \"Google\" esté instalada y activada (Ajustes → Aplicaciones → Google)."
+        : "El navegador no dio permiso para el micrófono. Actívalo en el icono a la izquierda de la barra de direcciones.";
+    case "audio-capture":
+      return "No se pudo usar el micrófono: otra app lo está usando (WhatsApp, grabadora, llamada). Ciérrala e inténtalo de nuevo.";
+    case "network":
+      return "El reconocimiento de voz necesita internet. Revisa tu conexión.";
+    case "language-not-supported":
+      return "Este teléfono no reconoce ese idioma por voz.";
+    default:
+      return "No se pudo escuchar tu voz (" + codigo + ").";
+  }
+}
+
+// Crea un reconocedor con los ajustes correctos para cada equipo
+function crearReconocedor(idioma, intentoIdioma) {
+  const rec = new Reconocimiento();
+  const lista = IDIOMAS[idioma].reconocimiento;
+  rec.lang = lista[Math.min(intentoIdioma || 0, lista.length - 1)];
+  // En Android el modo continuo repite palabras y falla; se usan frases cortas y se reinicia
+  rec.continuous = !esAndroid;
+  rec.interimResults = true;
+  rec.maxAlternatives = 1;
+  return rec;
+}
+
+// Escucha durante "ms" milisegundos y devuelve todo lo que entendió
+function reconocerDurante(idioma, ms, alInterino) {
+  return new Promise(resolve => {
+    if (!Reconocimiento) return resolve({ texto: "", error: "no-soportado" });
+    let finales = "", interino = "", terminado = false, errorFinal = "", intentoIdioma = 0, rec = null;
+    const fin = Date.now() + ms;
+
+    const arrancar = () => {
+      if (terminado) return;
+      rec = crearReconocedor(idioma, intentoIdioma);
+      rec.onresult = e => {
+        interino = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) finales += e.results[i][0].transcript + " ";
+          else interino += e.results[i][0].transcript;
+        }
+        if (alInterino) alInterino((finales + interino).trim());
+      };
+      rec.onerror = e => {
+        if (e.error === "language-not-supported" && intentoIdioma < IDIOMAS[idioma].reconocimiento.length - 1) {
+          intentoIdioma++;
+          return;
+        }
+        if (e.error !== "no-speech" && e.error !== "aborted") errorFinal = e.error;
+      };
+      rec.onend = () => {
+        if (interino) { finales += interino + " "; interino = ""; }
+        const errorGrave = errorFinal && errorFinal !== "network";
+        if (!terminado && !errorGrave && Date.now() < fin - 300) setTimeout(arrancar, 150);
+        else cerrar();
+      };
+      try { rec.start(); } catch (err) { errorFinal = "audio-capture"; cerrar(); }
+    };
+
+    const cerrar = () => {
+      if (terminado) return;
+      terminado = true;
+      clearTimeout(reloj);
+      try { rec && rec.stop(); } catch (e) {}
+      setTimeout(() => resolve({ texto: (finales + interino).trim(), error: errorFinal }), 400);
+    };
+
+    const reloj = setTimeout(() => { try { rec && rec.stop(); } catch (e) {} setTimeout(cerrar, 1200); }, ms);
+    arrancar();
+  });
+}
+
+// =====================================================================
 //  SALA
 // =====================================================================
 const sala = {
   codigo: null, miId: null, ultimoId: 0,
   nombre: "", idioma: "es", genero: "hombre",
+  esAdmin: false, aceptado: false,
   micActivo: false, reproduciendo: false, cola: [],
-  temporizador: null, rec: null,
+  temporizador: null, rec: null, intentoIdioma: 0,
   modo: "presionar", presionando: false, escuchando: false,
-  pendiente: "", ultimoEnviado: { texto: "", t: 0 }
+  pendiente: "", ultimoEnviado: { texto: "", t: 0 },
+  historial: [], nombresVistos: new Set(), participantesPrevios: null, solicitudesVistas: new Set()
 };
 
 function aviso(texto) {
@@ -592,7 +775,7 @@ function aviso(texto) {
 }
 
 function mostrarPaso(id) {
-  ["pasoDatos", "pasoPrueba", "pasoSala"].forEach(p => $(p).hidden = p !== id);
+  ["pasoDatos", "pasoPrueba", "pasoEspera", "pasoSala"].forEach(p => $(p).hidden = p !== id);
 }
 
 // ---------- Paso 1 → Paso 2 ----------
@@ -600,7 +783,7 @@ $("btnIrPrueba").addEventListener("click", () => {
   const nombre = $("nombreSala").value.trim();
   if (!nombre) { aviso("Escribe tu nombre."); return; }
   if (!Reconocimiento) {
-    aviso("Este navegador no puede reconocer voz. Usa Google Chrome o Microsoft Edge.");
+    aviso("Este navegador no puede reconocer voz. Usa Google Chrome (computadora o Android) o Safari (iPhone).");
     return;
   }
   aviso("");
@@ -610,6 +793,9 @@ $("btnIrPrueba").addEventListener("click", () => {
   $("generoPrueba").value = sala.genero;
   // por defecto, probar en un idioma distinto al propio
   $("idiomaPrueba").value = sala.idioma === "en" ? "es" : "en";
+  $("textoPrueba1").textContent = esAndroid
+    ? "Primero se graban 5 segundos de tu voz real. Después repite la frase para comprobar cómo te entiende el sistema."
+    : "Graba 5 segundos hablando en tu idioma. Luego escúchate y revisa cómo te entendió el sistema.";
   actualizarVozPrueba();
   mostrarPaso("pasoPrueba");
 });
@@ -624,72 +810,97 @@ $("generoPrueba").addEventListener("change", () => {
 $("idiomaPrueba").addEventListener("change", actualizarVozPrueba);
 
 function actualizarVozPrueba() {
-  $("vozPruebaInfo").textContent = "Voz: " + describirVoz($("idiomaPrueba").value, $("generoPrueba").value);
+  const idioma = $("idiomaPrueba").value;
+  // Solo se ofrece Hombre/Mujer si en este equipo existen las dos voces para ese idioma
+  $("labelGeneroPrueba").hidden = !hayAmbosGeneros(idioma);
+  $("vozPruebaInfo").textContent = "Voz: " + describirVoz(idioma, $("generoPrueba").value);
 }
 
 // ---------- Prueba 1: grabar la voz real ----------
 let transcripcionPrueba = "";
 
+function cuentaRegresiva(segundos, prefijo) {
+  return new Promise(resolve => {
+    let restantes = segundos;
+    $("cuentaAtras").textContent = prefijo + restantes;
+    const intervalo = setInterval(() => {
+      restantes--;
+      if (restantes > 0) { $("cuentaAtras").textContent = prefijo + restantes; return; }
+      clearInterval(intervalo);
+      $("cuentaAtras").textContent = "";
+      resolve();
+    }, 1000);
+  });
+}
+
+async function grabarAudio(ms) {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  return new Promise(resolve => {
+    const partes = [];
+    let grabadora;
+    try { grabadora = new MediaRecorder(stream); }
+    catch (e) { stream.getTracks().forEach(t => t.stop()); return resolve(null); }
+    grabadora.ondataavailable = e => partes.push(e.data);
+    grabadora.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());   // libera el micrófono
+      resolve(new Blob(partes, { type: grabadora.mimeType }));
+    };
+    grabadora.start();
+    setTimeout(() => grabadora.stop(), ms);
+  });
+}
+
+function mostrarGrabacion(blob) {
+  if (!blob) return;
+  const audio = $("audioPrueba");
+  audio.src = URL.createObjectURL(blob);
+  audio.hidden = false;
+  audio.play().catch(() => {});
+}
+
 $("btnGrabar").addEventListener("click", async () => {
-  let stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch (e) {
-    aviso("No se pudo usar el micrófono (" + e.name + "). Revisa el permiso del navegador para este sitio: icono a la izquierda de la barra de direcciones.");
-    return;
-  }
   aviso("");
   $("btnGrabar").disabled = true;
   transcripcionPrueba = "";
   $("transcripcionPrueba").textContent = "…";
+  const mostrarTexto = t => { $("transcripcionPrueba").textContent = t || "…"; };
 
-  // Grabación del audio real
-  const partes = [];
-  const grabadora = new MediaRecorder(stream);
-  grabadora.ondataavailable = e => partes.push(e.data);
-  grabadora.onstop = () => {
-    stream.getTracks().forEach(t => t.stop());
-    const audio = $("audioPrueba");
-    audio.src = URL.createObjectURL(new Blob(partes, { type: grabadora.mimeType }));
-    audio.hidden = false;
-    audio.play();
-  };
-
-  // Al mismo tiempo, el reconocimiento de voz
-  const rec = new Reconocimiento();
-  rec.lang = IDIOMAS[sala.idioma].reconocimiento;
-  rec.continuous = true;
-  rec.interimResults = true;
-  rec.onresult = e => {
-    let finales = "", interino = "";
-    for (let i = 0; i < e.results.length; i++) {
-      if (e.results[i].isFinal) finales += e.results[i][0].transcript + " ";
-      else interino += e.results[i][0].transcript;
+  try {
+    let resultado;
+    if (esAndroid) {
+      // Android no permite grabar y reconocer a la vez: se hace en dos pasos
+      const grabando = grabarAudio(5000);
+      await cuentaRegresiva(5, "🔴 Grabando tu voz… ");
+      const blob = await grabando;
+      await new Promise(r => setTimeout(r, 400));
+      $("cuentaAtras").textContent = "";
+      const reconociendo = reconocerDurante(sala.idioma, 6000, mostrarTexto);
+      await cuentaRegresiva(6, "🗣 Ahora repite la frase… ");
+      resultado = await reconociendo;
+      mostrarGrabacion(blob);
+    } else {
+      const grabando = grabarAudio(5000);
+      const reconociendo = reconocerDurante(sala.idioma, 5000, mostrarTexto);
+      await cuentaRegresiva(5, "🔴 Grabando… ");
+      const blob = await grabando;
+      mostrarGrabacion(blob);
+      resultado = await reconociendo;
     }
-    transcripcionPrueba = finales.trim();
-    $("transcripcionPrueba").textContent = (finales + interino).trim() || "…";
-  };
-  rec.onend = () => {
-    if (!transcripcionPrueba) {
-      transcripcionPrueba = $("transcripcionPrueba").textContent.replace("…", "").trim();
+
+    transcripcionPrueba = resultado.texto;
+    if (transcripcionPrueba) {
+      $("transcripcionPrueba").textContent = transcripcionPrueba;
+    } else {
+      $("transcripcionPrueba").textContent = "(no se entendió nada)";
+      aviso(resultado.error ? mensajeErrorVoz(resultado.error) : "No se escuchó nada. Habla más cerca del micrófono e inténtalo otra vez.");
     }
-    if (!transcripcionPrueba) $("transcripcionPrueba").textContent = "(no se entendió nada; habla más cerca del micrófono)";
-  };
-
-  grabadora.start();
-  try { rec.start(); } catch (e) {}
-
-  let restantes = 5;
-  $("cuentaAtras").textContent = "Grabando… " + restantes;
-  const intervalo = setInterval(() => {
-    restantes--;
-    if (restantes > 0) { $("cuentaAtras").textContent = "Grabando… " + restantes; return; }
-    clearInterval(intervalo);
+  } catch (e) {
+    $("transcripcionPrueba").textContent = "—";
+    aviso("No se pudo usar el micrófono (" + e.name + "). " + mensajeErrorVoz("not-allowed"));
+  } finally {
     $("cuentaAtras").textContent = "";
     $("btnGrabar").disabled = false;
-    grabadora.stop();
-    rec.stop();
-  }, 1000);
+  }
 });
 
 // ---------- Prueba 2: escuchar la voz asignada ----------
@@ -709,39 +920,59 @@ $("btnEscucharAsignada").addEventListener("click", () => {
   else leer("Hola, así sonará mi voz en esta sala. ¿Me escuchas bien?", "es");
 });
 
-// ---------- Entrar a la sala ----------
+// ---------- Entrar a la sala (crear o pedir permiso) ----------
 $("btnEntrar").addEventListener("click", () => {
   detenerHabla();
-  iniciarMedidor();
   $("btnEntrar").disabled = true;
   aviso("");
   const codigo = $("codigoSala").value.trim();
 
-  const unirse = cod => {
-    servidor("unirseSala", cod, sala.nombre, sala.idioma, sala.genero)
-      .then(r => {
-        $("btnEntrar").disabled = false;
-        sala.codigo = r.codigo;
-        sala.miId = r.miId;
-        sala.ultimoId = r.ultimoId;
-        $("codigoSalaTxt").textContent = r.codigo;
-        $("registro").innerHTML = "";
-        mostrarPaso("pasoSala");
-        cambiarModo();
-        $("enlaceSala").value = location.origin + location.pathname + "?sala=" + r.codigo;
-        sondear();
-      })
-      .catch(errorAlEntrar);
+  const alEntrar = r => {
+    $("btnEntrar").disabled = false;
+    sala.codigo = r.codigo;
+    sala.miId = r.miId;
+    sala.ultimoId = r.ultimoId;
+    sala.esAdmin = r.esAdmin;
+    sala.aceptado = false;
+    sala.historial = [];
+    sala.nombresVistos = new Set([sala.nombre]);
+    sala.participantesPrevios = null;
+    sala.solicitudesVistas = new Set();
+    $("registro").innerHTML = "";
+    $("codigoSalaTxt").textContent = r.codigo;
+    $("codigoEsperaTxt").textContent = r.codigo;
+    $("enlaceSala").value = location.origin + location.pathname + "?sala=" + r.codigo;
+
+    if (r.estado === "aceptado") entrarASalaUI();
+    else mostrarPaso("pasoEspera");
+    sondear();
   };
 
-  if (codigo) unirse(codigo);
-  else servidor("crearSala").then(unirse).catch(errorAlEntrar);
+  const p = codigo
+    ? servidor("unirseSala", codigo, sala.nombre, sala.idioma, sala.genero)
+    : servidor("crearSala", sala.nombre, sala.idioma, sala.genero);
+  p.then(alEntrar).catch(e => { $("btnEntrar").disabled = false; aviso(e.message); });
 });
 
-function errorAlEntrar(e) {
-  $("btnEntrar").disabled = false;
-  aviso(e.message);
+function entrarASalaUI() {
+  if (sala.aceptado) return;
+  sala.aceptado = true;
+  mostrarPaso("pasoSala");
+  $("infoAdmin").hidden = !sala.esAdmin;
+  $("btnSalir").textContent = sala.esAdmin ? "⏹ Finalizar reunión" : "Salir de la sala";
+  $("btnSalir").className = sala.esAdmin ? "peligro" : "secundario";
+  $("nivel").hidden = esAndroid;
+  $("filtroRuido").hidden = esAndroid;
+  $("notaAndroidLibre").hidden = !esAndroid;
+  cambiarModo();
+  if (!esAndroid) iniciarMedidor();
+  registrarSistema(sala.esAdmin ? "Creaste la sala " + sala.codigo : "Entraste a la sala " + sala.codigo);
 }
+
+$("btnCancelarEspera").addEventListener("click", () => {
+  if (sala.miId) servidor("salirSala", sala.codigo, sala.miId).catch(() => {});
+  cerrarSalaLocal("cancelado");
+});
 
 $("btnCopiar").addEventListener("click", () => {
   const campo = $("enlaceSala");
@@ -754,45 +985,138 @@ $("btnCopiar").addEventListener("click", () => {
 // ---------- Recibir mensajes (consulta cada ~1 s) ----------
 function sondear() {
   if (!sala.miId) return;
+  const miId = sala.miId;
   servidor("recibirMensajes", sala.codigo, sala.miId, sala.ultimoId)
     .then(r => {
-      if (!sala.miId) return;
+      if (sala.miId !== miId) return;
+      if (r.finalizada) { cerrarSalaLocal("finalizada"); return; }
+      if (r.estado === "pendiente") { sala.temporizador = setTimeout(sondear, 1500); return; }
+
+      if (!sala.aceptado) {
+        entrarASalaUI();
+        reproducirAvisoSonoro();
+      }
+      sala.esAdmin = r.esAdmin;
       sala.ultimoId = r.ultimoId;
       dibujarParticipantes(r.participantes);
+      dibujarSolicitudes(r.solicitudes || []);
       r.mensajes.forEach(m => {
-        agregarAlRegistro(m.nombre, m.texto, false, m.idiomaOrigen !== sala.idioma ? m.original : "");
+        const original = m.idiomaOrigen !== sala.idioma ? m.original : "";
+        agregarAlRegistro(m.nombre, m.texto, false, original);
+        sala.historial.push({ tipo: "mensaje", hora: m.hora || Date.now(), quien: m.nombre, texto: m.texto, original: original });
         sala.cola.push(m);
       });
       reproducirCola();
       sala.temporizador = setTimeout(sondear, 800);
     })
     .catch(e => {
-      if (!sala.miId) return;
-      if (/no existe|Ya no estás|inactividad/.test(e.message)) {
+      if (sala.miId !== miId) return;
+      if (e.message === "RECHAZADO") {
+        cerrarSalaLocal("rechazado");
+      } else if (/no existe|Ya no estás|inactividad|terminó/.test(e.message)) {
         aviso(e.message);
-        cerrarSalaLocal();
+        cerrarSalaLocal("desconectado");
       } else {
         sala.temporizador = setTimeout(sondear, 3000);
       }
     });
 }
 
+function registrarSistema(texto) {
+  sala.historial.push({ tipo: "sistema", hora: Date.now(), texto: texto });
+  const div = document.createElement("div");
+  div.className = "msg sis";
+  div.textContent = texto;
+  $("registro").appendChild(div);
+  $("registro").scrollTop = $("registro").scrollHeight;
+}
+
 function dibujarParticipantes(lista) {
+  // Anota en el chat quién entra y quién sale
+  const actuales = new Map(lista.map(p => [p.id, p.nombre]));
+  if (sala.participantesPrevios) {
+    actuales.forEach((nombre, id) => { if (!sala.participantesPrevios.has(id) && id !== sala.miId) registrarSistema(nombre + " entró a la sala"); });
+    sala.participantesPrevios.forEach((nombre, id) => { if (!actuales.has(id)) registrarSistema(nombre + " salió de la sala"); });
+  }
+  sala.participantesPrevios = actuales;
+  lista.forEach(p => sala.nombresVistos.add(p.nombre));
+
   const cont = $("listaParticipantes");
   cont.innerHTML = "";
   lista.forEach(p => {
     const chip = document.createElement("span");
     chip.className = "chip" + (p.esYo ? " yo" : "");
     chip.textContent = (p.genero === "mujer" ? "👩 " : "👨 ") + p.nombre +
-      " · " + IDIOMAS[p.idioma].nombre + (p.esYo ? " (tú)" : "");
+      " · " + IDIOMAS[p.idioma].nombre + (p.esAdmin ? " ⭐" : "") + (p.esYo ? " (tú)" : "");
+    if (sala.esAdmin && !p.esYo) {
+      const b = document.createElement("button");
+      b.className = "mini";
+      b.title = "Retirar de la sala";
+      b.textContent = "✖";
+      b.addEventListener("click", () => {
+        if (!confirm("¿Retirar a " + p.nombre + " de la sala?")) return;
+        servidor("responderSolicitud", sala.codigo, sala.miId, p.id, false).catch(e => aviso(e.message));
+      });
+      chip.appendChild(b);
+    }
     cont.appendChild(chip);
   });
   if (lista.length < 2) {
     const s = document.createElement("span");
     s.className = "suave";
-    s.textContent = "Esperando a que alguien más entre… comparte el enlace.";
+    s.textContent = sala.esAdmin ? "Esperando a que alguien más entre… comparte el enlace." : "Esperando a los demás…";
     cont.appendChild(s);
   }
+}
+
+// Solo el administrador ve las solicitudes de ingreso
+function dibujarSolicitudes(lista) {
+  const panel = $("panelSolicitudes");
+  panel.hidden = !lista.length;
+  const cont = $("listaSolicitudes");
+  cont.innerHTML = "";
+  let hayNuevas = false;
+  lista.forEach(p => {
+    if (!sala.solicitudesVistas.has(p.id)) { sala.solicitudesVistas.add(p.id); hayNuevas = true; }
+    const fila = document.createElement("div");
+    fila.className = "solicitud";
+    const t = document.createElement("span");
+    t.textContent = (p.genero === "mujer" ? "👩 " : "👨 ") + p.nombre + " · " + IDIOMAS[p.idioma].nombre;
+    const si = document.createElement("button");
+    si.className = "verde";
+    si.textContent = "✔ Aceptar";
+    const no = document.createElement("button");
+    no.className = "peligro";
+    no.textContent = "✖ Rechazar";
+    const responder = aceptar => {
+      si.disabled = no.disabled = true;
+      servidor("responderSolicitud", sala.codigo, sala.miId, p.id, aceptar)
+        .catch(e => { si.disabled = no.disabled = false; aviso(e.message); });
+    };
+    si.addEventListener("click", () => responder(true));
+    no.addEventListener("click", () => responder(false));
+    fila.appendChild(t);
+    fila.appendChild(si);
+    fila.appendChild(no);
+    cont.appendChild(fila);
+  });
+  if (hayNuevas) reproducirAvisoSonoro();
+}
+
+// Un "ding" corto y vibración para avisar
+function reproducirAvisoSonoro() {
+  try { navigator.vibrate && navigator.vibrate([150, 80, 150]); } catch (e) {}
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const vol = ctx.createGain();
+    osc.frequency.value = 880;
+    vol.gain.setValueAtTime(0.15, ctx.currentTime);
+    vol.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.connect(vol); vol.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.4);
+    setTimeout(() => ctx.close(), 600);
+  } catch (e) {}
 }
 
 function agregarAlRegistro(quien, texto, esMio, original) {
@@ -834,15 +1158,16 @@ async function reproducirCola() {
   reproducirCola();
 }
 
-// ---------- Medidor de volumen (para el filtro de ruido) ----------
+// ---------- Medidor de volumen (solo computadora y iPhone; Android no lo permite junto al reconocimiento) ----------
 const medidor = { ctx: null, stream: null, analizador: null, raf: 0, historial: [] };
 const umbral = () => parseInt($("umbral").value, 10);
 
 function iniciarMedidor() {
-  if (medidor.ctx) return;
+  if (medidor.ctx || esAndroid) return;
   try { medidor.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
   navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true } })
     .then(stream => {
+      if (!medidor.ctx) { stream.getTracks().forEach(t => t.stop()); return; }
       medidor.stream = stream;
       const fuente = medidor.ctx.createMediaStreamSource(stream);
       medidor.analizador = medidor.ctx.createAnalyser();
@@ -850,6 +1175,7 @@ function iniciarMedidor() {
       fuente.connect(medidor.analizador);
       const datos = new Uint8Array(medidor.analizador.fftSize);
       const ciclo = () => {
+        if (!medidor.analizador) return;
         medidor.analizador.getByteTimeDomainData(datos);
         let suma = 0;
         for (let i = 0; i < datos.length; i++) { const v = (datos[i] - 128) / 128; suma += v * v; }
@@ -869,13 +1195,13 @@ function iniciarMedidor() {
 function detenerMedidor() {
   cancelAnimationFrame(medidor.raf);
   if (medidor.stream) medidor.stream.getTracks().forEach(t => t.stop());
-  if (medidor.ctx) medidor.ctx.close();
+  if (medidor.ctx) medidor.ctx.close().catch(() => {});
   medidor.ctx = null; medidor.stream = null; medidor.analizador = null; medidor.historial = [];
 }
 
 // Volumen más alto de los últimos milisegundos
 function picoReciente(ms) {
-  if (!medidor.analizador) return 100;     // sin medidor no se filtra
+  if (!medidor.analizador) return 100;     // sin medidor no se filtra por volumen
   const limite = performance.now() - ms;
   let maximo = 0;
   medidor.historial.forEach(([t, n]) => { if (t >= limite && n > maximo) maximo = n; });
@@ -909,7 +1235,7 @@ function actualizarBotonMic() {
     else texto = sala.escuchando ? "🔴 Escuchando… suelta para enviar" : "⏳ Preparando… espera el rojo";
   } else {
     activo = sala.micActivo;
-    texto = sala.micActivo ? "🔴 Micrófono activo (clic para silenciar)" : "🎙 Activar micrófono";
+    texto = sala.micActivo ? "🔴 Micrófono activo (toca para silenciar)" : "🎙 Activar micrófono";
   }
   $("btnMic").classList.toggle("activo", activo);
   $("btnMic").textContent = texto;
@@ -917,7 +1243,8 @@ function actualizarBotonMic() {
 
 // Mantener presionado (mouse, dedo o barra espaciadora)
 function empezarAHablar() {
-  if (sala.modo !== "presionar" || sala.presionando || !sala.miId) return;
+  if (sala.modo !== "presionar" || sala.presionando || !sala.aceptado) return;
+  detenerHabla();          // si estaba sonando la voz del otro, se calla para escucharte
   sala.presionando = true;
   iniciarReconocimiento();
   actualizarBotonMic();
@@ -940,12 +1267,13 @@ botonMic.addEventListener("pointerdown", e => {
 });
 botonMic.addEventListener("pointerup", dejarDeHablar);
 botonMic.addEventListener("pointercancel", dejarDeHablar);
+botonMic.addEventListener("lostpointercapture", dejarDeHablar);
 botonMic.addEventListener("contextmenu", e => e.preventDefault());
 botonMic.addEventListener("click", () => { if (sala.modo === "libre") alternarManosLibres(); });
 
 document.addEventListener("keydown", e => {
   if (e.code !== "Space" || e.repeat || $("pasoSala").hidden || sala.modo !== "presionar") return;
-  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if (/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName)) return;
   e.preventDefault();
   empezarAHablar();
 });
@@ -960,15 +1288,17 @@ function alternarManosLibres() {
   actualizarBotonMic();
 }
 
-// ---------- Reconocimiento de voz ----------
+// ---------- Reconocimiento de voz en la sala ----------
+function sigueEscuchando() {
+  if (sala.modo === "presionar") return sala.presionando;
+  return sala.micActivo && !(sala.reproduciendo && !$("chkAudifonos").checked);
+}
+
 function iniciarReconocimiento() {
-  if (sala.rec) return;
+  if (sala.rec || !Reconocimiento) return;
   sala.pendiente = "";
-  const rec = new Reconocimiento();
-  rec.lang = IDIOMAS[sala.idioma].reconocimiento;
-  rec.continuous = true;
-  rec.interimResults = true;
-  rec.maxAlternatives = 1;
+  const rec = crearReconocedor(sala.idioma, sala.intentoIdioma);
+  let errorGrave = false;
 
   rec.onstart = () => { sala.escuchando = true; actualizarBotonMic(); };
 
@@ -979,17 +1309,22 @@ function iniciarReconocimiento() {
       if (r.isFinal) { sala.pendiente = ""; procesarFrase(r[0].transcript, r[0].confidence); }
       else interino += r[0].transcript;
     }
-    if (interino) sala.pendiente = interino;
-    $("interino").textContent = interino ? "🗣 " + interino : "\u00a0";
+    sala.pendiente = interino;
+    $("interino").textContent = interino ? "🗣 " + interino : " ";
   };
 
   rec.onerror = e => {
-    if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-      sala.micActivo = false;
-      sala.presionando = false;
-      actualizarBotonMic();
-      aviso("El navegador no dio permiso para el micrófono. Actívalo en el icono a la izquierda de la barra de direcciones.");
+    if (e.error === "no-speech" || e.error === "aborted") return;
+    if (e.error === "language-not-supported" && sala.intentoIdioma < IDIOMAS[sala.idioma].reconocimiento.length - 1) {
+      sala.intentoIdioma++;       // prueba con otro acento del mismo idioma
+      return;
     }
+    if (e.error === "network") { aviso(mensajeErrorVoz(e.error)); return; }
+    errorGrave = true;
+    sala.micActivo = false;
+    sala.presionando = false;
+    aviso(mensajeErrorVoz(e.error));
+    actualizarBotonMic();
   };
 
   rec.onend = () => {
@@ -1001,18 +1336,15 @@ function iniciarReconocimiento() {
       sala.pendiente = "";
       procesarFrase(t, 0);
     }
-    $("interino").textContent = "\u00a0";
+    $("interino").textContent = " ";
     actualizarBotonMic();
-    // Chrome corta el reconocimiento cada cierto tiempo: en manos libres se reinicia solo
-    if (sala.modo === "libre" && sala.micActivo && !(sala.reproduciendo && !$("chkAudifonos").checked)) {
-      setTimeout(iniciarReconocimiento, 250);
-    }
-    // Si sigues presionando (Chrome se detuvo solo), se vuelve a abrir
-    if (sala.modo === "presionar" && sala.presionando) setTimeout(iniciarReconocimiento, 100);
+    // El navegador corta el reconocimiento cada cierto tiempo (en Android después de cada frase): se reabre solo
+    if (!errorGrave && sigueEscuchando()) setTimeout(iniciarReconocimiento, esAndroid ? 120 : 250);
   };
 
   sala.rec = rec;
-  try { rec.start(); } catch (e) { sala.rec = null; }
+  try { rec.start(); }
+  catch (e) { sala.rec = null; setTimeout(() => { if (sigueEscuchando()) iniciarReconocimiento(); }, 300); }
 }
 
 function detenerReconocimiento() {
@@ -1022,8 +1354,8 @@ function detenerReconocimiento() {
   sala.escuchando = false;
   sala.pendiente = "";
   rec.onend = null;
-  rec.abort();
-  $("interino").textContent = "\u00a0";
+  try { rec.abort(); } catch (e) {}
+  $("interino").textContent = " ";
 }
 
 // Decide si una frase es real o ruido antes de enviarla
@@ -1032,7 +1364,8 @@ function procesarFrase(texto, confianza) {
   if (!texto) return;
 
   if (sala.modo === "libre") {
-    if (picoReciente(4000) < umbral() || (confianza > 0 && confianza < 0.5)) {
+    const minimaConfianza = esAndroid ? 0.6 : 0.5;
+    if (picoReciente(4000) < umbral() || (confianza > 0 && confianza < minimaConfianza)) {
       $("descartado").textContent = "🔇 Ignorado como ruido: \"" + texto + "\"";
       return;
     }
@@ -1050,24 +1383,40 @@ function procesarFrase(texto, confianza) {
 
 function enviarFrase(texto) {
   agregarAlRegistro("", texto, true, "");
+  sala.historial.push({ tipo: "mensaje", hora: Date.now(), quien: sala.nombre + " (yo)", texto: texto, original: "" });
   servidor("enviarMensaje", sala.codigo, sala.miId, texto)
     .then(() => { if ($("avisoSala").textContent.indexOf("No se pudo enviar") === 0) aviso(""); })
     .catch(e => aviso("No se pudo enviar: " + e.message));
 }
 
-// ---------- Salir ----------
+// ---------- Salir / finalizar ----------
 $("btnSalir").addEventListener("click", () => {
+  if (sala.esAdmin && !confirm("¿Finalizar la reunión? Terminará para todos los participantes.")) return;
   if (sala.miId) servidor("salirSala", sala.codigo, sala.miId).catch(() => {});
-  cerrarSalaLocal();
+  cerrarSalaLocal(sala.esAdmin ? "finalizaste" : "salir");
 });
 
-window.addEventListener("beforeunload", () => {
+// Pide confirmación si se intenta cerrar la página en plena reunión
+window.addEventListener("beforeunload", e => {
+  if (sala.miId && sala.aceptado) { e.preventDefault(); e.returnValue = ""; }
+});
+window.addEventListener("pagehide", () => {
   if (sala.miId) {
-    navigator.sendBeacon(URL_API, JSON.stringify({ accion: "salirSala", args: [sala.codigo, sala.miId], clave: claveAcceso }));
+    navigator.sendBeacon(URL_SERVIDOR, JSON.stringify({ accion: "salirSala", args: [sala.codigo, sala.miId], clave: claveAcceso }));
   }
 });
 
-function cerrarSalaLocal() {
+let conversacionFinal = null;
+
+function cerrarSalaLocal(motivo) {
+  const estabaDentro = sala.aceptado;
+  conversacionFinal = {
+    codigo: sala.codigo,
+    nombre: sala.nombre,
+    participantes: [...sala.nombresVistos],
+    entradas: sala.historial.slice()
+  };
+
   clearTimeout(sala.temporizador);
   sala.micActivo = false;
   sala.presionando = false;
@@ -1077,8 +1426,77 @@ function cerrarSalaLocal() {
   sala.cola = [];
   sala.reproduciendo = false;
   sala.miId = null;
+  sala.aceptado = false;
+  sala.esAdmin = false;
+  $("panelSolicitudes").hidden = true;
   actualizarBotonMic();
   mostrarPaso("pasoDatos");
+
+  if (motivo === "rechazado" && !estabaDentro) {
+    aviso("El administrador de la sala no aprobó tu ingreso.");
+    return;
+  }
+  if (motivo === "cancelado" || !estabaDentro) return;
+
+  const titulos = {
+    salir: "Saliste de la sala",
+    finalizaste: "Finalizaste la reunión",
+    finalizada: "La reunión terminó",
+    rechazado: "El administrador te retiró de la sala",
+    desconectado: "Te desconectaste de la sala"
+  };
+  $("modalTitulo").textContent = titulos[motivo] || "La reunión terminó";
+  const n = conversacionFinal.entradas.filter(x => x.tipo === "mensaje").length;
+  $("modalTexto").textContent = n
+    ? "¿Quieres descargar lo que se conversó (" + n + " mensaje" + (n === 1 ? "" : "s") + ")?"
+    : "No hubo mensajes en esta conversación, pero puedes descargar el registro igualmente.";
+  $("modalEstado").textContent = "";
+  $("btnPdf").disabled = false;
+  $("modalFin").hidden = false;
+}
+
+$("btnCerrarModal").addEventListener("click", () => { $("modalFin").hidden = true; });
+
+$("btnPdf").addEventListener("click", () => {
+  if (!conversacionFinal) return;
+  $("btnPdf").disabled = true;
+  $("modalEstado").textContent = "Generando el PDF… (unos segundos)";
+  servidor("generarPdf", conversacionFinal)
+    .then(r => {
+      const bytes = Uint8Array.from(atob(r.base64), c => c.charCodeAt(0));
+      descargarArchivo(new Blob([bytes], { type: "application/pdf" }), r.nombre);
+      $("modalEstado").textContent = "✅ Listo. Revisa tus descargas.";
+      $("btnPdf").disabled = false;
+    })
+    .catch(e => {
+      // Si el servidor falla, se descarga al menos como texto
+      descargarArchivo(new Blob([conversacionComoTexto(conversacionFinal)], { type: "text/plain;charset=utf-8" }),
+                       "Conversacion_" + conversacionFinal.codigo + ".txt");
+      $("modalEstado").textContent = "No se pudo crear el PDF (" + e.message + "). Se descargó como texto.";
+      $("btnPdf").disabled = false;
+    });
+});
+
+function descargarArchivo(blob, nombre) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+function conversacionComoTexto(c) {
+  const hora = t => new Date(t).toLocaleTimeString();
+  let txt = "Conversación – Sala " + c.codigo + "\nDescargado por: " + c.nombre +
+            "\nParticipantes: " + c.participantes.join(", ") + "\n\n";
+  c.entradas.forEach(e => {
+    if (e.tipo === "sistema") txt += "[" + hora(e.hora) + "] -- " + e.texto + " --\n";
+    else txt += "[" + hora(e.hora) + "] " + e.quien + ": " + e.texto + (e.original ? "\n      (Original: " + e.original + ")" : "") + "\n";
+  });
+  return txt + "\n© Ing. Luis Fuentes Robles – Todos los derechos reservados · Tel. +506 8880-8471\n";
 }
 </script>
 
