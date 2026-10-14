@@ -69,6 +69,7 @@
   .msg.otro{ background:#fff; border:1px solid #e3e3e3; }
   .msg.sis{ max-width:100%; text-align:center; color:#777; font-size:13px; font-style:italic; padding:2px; }
   .msg .quien{ font-size:12px; color:#777; margin-bottom:3px; }
+  .repetir{ margin:0 0 0 8px; padding:2px 8px; font-size:14px; background:#e3edf9; color:#0D47A1; }
   .msg .orig{ font-size:13px; color:#888; margin-top:4px; font-style:italic; }
   .pie{ text-align:center; color:#777; font-size:13px; margin-top:25px; padding-top:15px; border-top:1px solid #e3e3e3; }
   .pie a{ color:#1565C0; text-decoration:none; }
@@ -446,31 +447,58 @@ let turnoHabla = 0;
 function hablar(texto, idioma, genero, velocidad) {
   return new Promise(resolve => {
     turnoHabla++;
-    speechSynthesis.cancel();
+    const miTurno = turnoHabla;
     const trozos = trocear(texto || "");
     if (!trozos.length) return resolve();
+    if (!todasLasVoces.length) cargarTodasLasVoces();   // en Android las voces cargan tarde
 
     const voz = elegirVoz(idioma, genero).voz;
-    const miTurno = turnoHabla;
-    let i = 0;
+    const rate = velocidad || 1;
+    let i = 0, vigilante = null;
 
     const siguiente = () => {
+      clearTimeout(vigilante);
       if (miTurno !== turnoHabla || i >= trozos.length) return resolve();
-      const u = new SpeechSynthesisUtterance(trozos[i++]);
+      const trozo = trozos[i++];
+      const u = new SpeechSynthesisUtterance(trozo);
       u.lang = voz ? voz.lang : IDIOMAS[idioma].locale;
       if (voz) { try { u.voice = voz; } catch (e) {} }
-      u.rate = velocidad || 1;
-      u.onend = siguiente;
-      u.onerror = siguiente;
+      u.rate = rate;
+      let terminado = false;
+      const fin = () => { if (terminado) return; terminado = true; siguiente(); };
+      u.onend = fin;
+      u.onerror = fin;
+      // Android a veces nunca avisa que terminó: si pasa el tiempo esperado, se sigue con lo próximo
+      const palabras = trozo.split(/\s+/).length;
+      vigilante = setTimeout(fin, Math.max(4000, (palabras * 550) / rate + 2500));
+      try { speechSynthesis.resume(); } catch (e) {}
       speechSynthesis.speak(u);
     };
-    siguiente();
+
+    // En Android, cancelar y hablar al mismo instante hace que se pierda la frase: se espera un poco
+    if (speechSynthesis.speaking || speechSynthesis.pending) {
+      speechSynthesis.cancel();
+      setTimeout(siguiente, 250);
+    } else {
+      siguiente();
+    }
   });
 }
 
 function detenerHabla() {
   turnoHabla++;
-  speechSynthesis.cancel();
+  if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+}
+
+// Los celulares solo dejan hablar a una página después de un toque del usuario.
+// Con cada toque se "desbloquea" la voz con una frase muda.
+function desbloquearVoz() {
+  try {
+    if (speechSynthesis.speaking || speechSynthesis.pending) return;
+    const u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0;
+    speechSynthesis.speak(u);
+  } catch (e) {}
 }
 </script>
 
@@ -952,6 +980,7 @@ $("btnEscucharAsignada").addEventListener("click", () => {
 // ---------- Entrar a la sala (crear o pedir permiso) ----------
 $("btnEntrar").addEventListener("click", () => {
   detenerHabla();
+  desbloquearVoz();
   $("btnEntrar").disabled = true;
   aviso("");
   const codigo = $("codigoSala").value.trim();
@@ -1036,7 +1065,14 @@ function sondear() {
       dibujarSolicitudes(r.solicitudes || []);
       r.mensajes.forEach(m => {
         const original = m.idiomaOrigen !== sala.idioma ? m.original : "";
-        agregarAlRegistro(m.nombre, m.texto, false, original);
+        const burbuja = agregarAlRegistro(m.nombre, m.texto, false, original);
+        const repetir = document.createElement("button");
+        repetir.className = "repetir";
+        repetir.type = "button";
+        repetir.title = "Escuchar otra vez";
+        repetir.textContent = "🔊";
+        repetir.addEventListener("click", () => hablar(m.texto, sala.idioma, m.genero, parseFloat($("velSala").value)));
+        burbuja.querySelector(".quien").appendChild(repetir);
         sala.historial.push({ tipo: "mensaje", hora: m.hora || Date.now(), quien: m.nombre, texto: m.texto,
           otros: original ? [{ idioma: IDIOMAS[m.idiomaOrigen].nombre, texto: original }] : [] });
         sala.cola.push(m);
@@ -1180,6 +1216,14 @@ function agregarBurbuja(quien, texto, esMio, original) {
   return div;
 }
 
+// Cualquier toque en la sala mantiene la voz habilitada en el celular
+let ultimoDesbloqueo = 0;
+$("pasoSala").addEventListener("pointerdown", () => {
+  if (!esTactil || sala.reproduciendo) return;
+  const ahora = Date.now();
+  if (ahora - ultimoDesbloqueo > 15000) { ultimoDesbloqueo = ahora; desbloquearVoz(); }
+}, true);
+
 // ---------- Reproducir lo que dicen los demás ----------
 async function reproducirCola() {
   if (sala.reproduciendo) return;
@@ -1191,7 +1235,9 @@ async function reproducirCola() {
   const pausarMic = sala.modo === "libre" && !$("chkAudifonos").checked;
   if (pausarMic) detenerReconocimiento();
 
+  estadoMic("🔊 Reproduciendo lo que dijo " + m.nombre + "…");
   await hablar(m.texto, sala.idioma, m.genero, parseFloat($("velSala").value));
+  if ($("estadoMic").textContent.indexOf("🔊 Reproduciendo") === 0) estadoMic("");
 
   sala.reproduciendo = false;
   if (sala.modo === "libre" && sala.micActivo && !sala.rec) iniciarReconocimiento();
