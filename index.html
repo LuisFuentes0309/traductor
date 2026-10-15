@@ -38,6 +38,7 @@
   button.mini{ padding:2px 8px; margin:0 0 0 6px; font-size:13px; background:#fff; color:#c62828; border:1px solid #c62828; }
   .velocidad{ width:150px; }
   .suave{ color:#777; font-size:14px; font-weight:normal; }
+  #resumenVoces div{ padding:4px 0; }
   .tarjeta{ border:1px solid #e3e3e3; border-radius:8px; padding:15px; margin-bottom:15px; }
   .formulario label{ display:block; margin:12px 0 4px; font-weight:bold; }
   .aviso{ background:#fff3e0; border-left:4px solid #ef6c00; padding:10px; border-radius:4px; }
@@ -157,6 +158,9 @@
       <option value="mujer">Mujer</option>
     </select>
 
+    <label for="acentoSala">Acento con el que quiero escuchar a los demás</label>
+    <select id="acentoSala"></select>
+
     <label for="codigoSala">Código de sala <span class="suave">(déjalo vacío para crear una nueva; tú serás el administrador)</span></label>
     <input type="text" id="codigoSala" maxlength="8" placeholder="Ej. K7P2Q" style="text-transform:uppercase">
 
@@ -192,6 +196,18 @@
       </div>
       <p id="vozPruebaInfo" class="suave"></p>
       <p class="suave">Nota: cada persona escucha con las voces instaladas en su propio teléfono o computadora, así que en otro equipo la voz puede variar un poco.</p>
+    </div>
+
+    <div class="tarjeta">
+      <b>3. Así escucharás a los demás</b>
+      <p class="suave">Cuando alguien te hable, oirás su traducción con estas voces (siempre respetando si es hombre o mujer):</p>
+      <div id="resumenVoces"></div>
+      <div class="barra" style="margin-top:8px">
+        <label>Acento <select id="acentoPrueba"></select></label>
+        <button id="btnOirHombre" class="secundario">🔊 Oír voz de hombre</button>
+        <button id="btnOirMujer" class="secundario">🔊 Oír voz de mujer</button>
+      </div>
+      <p class="suave" id="sugerenciaAcento"></p>
     </div>
 
     <button id="btnVolverDatos" class="secundario">← Atrás</button>
@@ -392,36 +408,108 @@ function hayAmbosGeneros(idioma) {
   return g.has("hombre") && g.has("mujer");
 }
 
-// Devuelve la mejor voz nativa del idioma, priorizando el género pedido
-function elegirVoz(idioma, genero) {
-  const localePreferido = IDIOMAS[idioma].locale.toLowerCase();
-  const candidatas = vocesDelIdioma(idioma);
-  if (!candidatas.length) return { voz: null, generoOk: false };
+// Acentos por idioma, en orden de cercanía (el primero es el predeterminado)
+const ACENTOS = {
+  es: [["es-CR","🇨🇷 Costa Rica"],["es-419","🌎 Latinoamérica"],["es-US","🇺🇸 Latino (EE. UU.)"],["es-MX","🇲🇽 México"],
+       ["es-CO","🇨🇴 Colombia"],["es-PA","🇵🇦 Panamá"],["es-GT","🇬🇹 Guatemala"],["es-SV","🇸🇻 El Salvador"],["es-HN","🇭🇳 Honduras"],
+       ["es-NI","🇳🇮 Nicaragua"],["es-VE","🇻🇪 Venezuela"],["es-PE","🇵🇪 Perú"],["es-EC","🇪🇨 Ecuador"],["es-CL","🇨🇱 Chile"],
+       ["es-AR","🇦🇷 Argentina"],["es-UY","🇺🇾 Uruguay"],["es-ES","🇪🇸 España"]],
+  en: [["en-US","🇺🇸 Estados Unidos"],["en-CA","🇨🇦 Canadá"],["en-GB","🇬🇧 Reino Unido"],["en-AU","🇦🇺 Australia"],
+       ["en-IE","🇮🇪 Irlanda"],["en-NZ","🇳🇿 Nueva Zelanda"],["en-ZA","🇿🇦 Sudáfrica"],["en-IN","🇮🇳 India"]],
+  fr: [["fr-FR","🇫🇷 Francia"],["fr-CA","🇨🇦 Canadá"],["fr-BE","🇧🇪 Bélgica"],["fr-CH","🇨🇭 Suiza"]],
+  de: [["de-DE","🇩🇪 Alemania"],["de-AT","🇦🇹 Austria"],["de-CH","🇨🇭 Suiza"]],
+  it: [["it-IT","🇮🇹 Italia"],["it-CH","🇨🇭 Suiza"]],
+  pt: [["pt-BR","🇧🇷 Brasil"],["pt-PT","🇵🇹 Portugal"]],
+  ja: [["ja-JP","🇯🇵 Japón"]]
+};
 
-  let mejor = null, mejorPuntaje = -1;
-  candidatas.forEach(v => {
-    const g = generoDeVoz(v);
-    let puntaje = 0;
-    if (g === genero) puntaje += 100;
-    else if (g === null) puntaje += 20;
-    if (normalizarLang(v.lang) === localePreferido) puntaje += 15;
-    if (/natural|online|neural/i.test(v.name)) puntaje += 8;   // voces de mejor calidad (Edge)
-    if (/google/i.test(v.name)) puntaje += 5;
-    if (puntaje > mejorPuntaje) { mejorPuntaje = puntaje; mejor = v; }
+// Acento que cada idioma debe usar en este equipo (se recuerda)
+const acentoPreferido = {};
+Object.keys(ACENTOS).forEach(c => acentoPreferido[c] = ACENTOS[c][0][0]);
+try { Object.assign(acentoPreferido, JSON.parse(localStorage.getItem("acentosPreferidos") || "{}")); } catch (e) {}
+function guardarAcento(idioma, acento) {
+  acentoPreferido[idioma] = acento;
+  try { localStorage.setItem("acentosPreferidos", JSON.stringify(acentoPreferido)); } catch (e) {}
+}
+
+function nombreAcento(cod) {
+  if (!cod) return "sin país";
+  const c = cod.toLowerCase();
+  for (const lista of Object.values(ACENTOS)) for (const [k, n] of lista) if (k.toLowerCase() === c) return n;
+  return cod;
+}
+
+// Orden de cercanía: el elegido primero, luego el resto; España (u otro de otro continente) queda al final
+function ordenAcentos(idioma, elegido) {
+  const lista = ACENTOS[idioma].map(a => a[0].toLowerCase());
+  const e = String(elegido || lista[0]).toLowerCase();
+  return [e].concat(lista.filter(x => x !== e));
+}
+
+function posicionAcento(voz, orden) {
+  const l = normalizarLang(voz.lang);
+  const i = orden.indexOf(l);
+  if (i >= 0) return i;
+  // Voz sin país conocido (por ejemplo "es"): justo antes del último
+  return orden.length - 0.5;
+}
+
+// Elige la voz: PRIMERO el género de quien habla, DESPUÉS el acento más cercano al preferido
+function elegirVoz(idioma, genero, acento) {
+  const candidatas = vocesDelIdioma(idioma);
+  const pedido = acento || acentoPreferido[idioma];
+  if (!candidatas.length) return { voz: null, generoOk: false, generoVoz: null, acentoPedido: pedido, acentoUsado: null };
+
+  const delGenero = candidatas.filter(v => generoDeVoz(v) === genero);
+  const sinGenero = candidatas.filter(v => generoDeVoz(v) === null);
+  const grupo = delGenero.length ? delGenero : (sinGenero.length ? sinGenero : candidatas);
+
+  const orden = ordenAcentos(idioma, pedido);
+  let mejor = null, mejorPuntaje = Infinity;
+  grupo.forEach(v => {
+    let puntaje = posicionAcento(v, orden) * 10;
+    if (/natural|online|neural/i.test(v.name)) puntaje -= 3;   // voces de mejor calidad (Edge)
+    if (/google/i.test(v.name)) puntaje -= 1;
+    if (puntaje < mejorPuntaje) { mejorPuntaje = puntaje; mejor = v; }
   });
-  return { voz: mejor, generoOk: generoDeVoz(mejor) === genero };
+  const usado = normalizarLang(mejor.lang);
+  return {
+    voz: mejor,
+    generoOk: generoDeVoz(mejor) === genero,
+    generoVoz: generoDeVoz(mejor),
+    acentoPedido: pedido,
+    acentoUsado: usado,
+    acentoOk: usado === String(pedido).toLowerCase()
+  };
 }
 
 function describirVoz(idioma, genero) {
   const r = elegirVoz(idioma, genero);
   if (!r.voz) return IDIOMAS[idioma].nombre + ": no hay voces instaladas en este equipo";
-  let txt = IDIOMAS[idioma].nombre + ": " + r.voz.name;
-  if (!r.generoOk) {
-    const g = [...generosDisponibles(idioma)];
-    if (g.length === 1) txt += " (en este equipo solo hay voz de " + g[0] + " para este idioma)";
-    else txt += " (no hay voz de " + genero + " para este idioma en este equipo)";
-  }
+  let txt = IDIOMAS[idioma].nombre + ": " + r.voz.name + " · acento " + nombreAcento(r.acentoUsado);
+  if (!r.generoOk && r.generoVoz) txt += " (en este equipo no hay voz de " + genero + " para este idioma; se usa voz de " + r.generoVoz + ")";
+  else if (!r.acentoOk) txt += " (no hay " + nombreAcento(r.acentoPedido) + " en este equipo)";
   return txt;
+}
+
+// Resumen de cómo sonarán hombres y mujeres en un idioma con el acento elegido
+function resumenVoces(idioma, acento) {
+  return ["hombre", "mujer"].map(g => {
+    const r = elegirVoz(idioma, g, acento);
+    const icono = g === "hombre" ? "👨 Hombres" : "👩 Mujeres";
+    if (!r.voz) return { genero: g, texto: icono + ": no hay voces de " + IDIOMAS[idioma].nombre + " en este equipo", ok: false };
+    let t = icono + ": acento " + nombreAcento(r.acentoUsado);
+    let ok = true;
+    if (r.generoVoz && !r.generoOk) {
+      t += " ⚠️ no hay voz de " + g + " en este equipo; se usará voz de " + r.generoVoz;
+      ok = false;
+    } else if (!r.generoVoz) {
+      t += " (este equipo no indica si la voz es de hombre o de mujer)";
+    }
+    if (!r.acentoOk && !(r.generoVoz && !r.generoOk)) t += " (no hay " + nombreAcento(r.acentoPedido) + " para esta voz)";
+    else if (r.acentoOk) t += " ✅";
+    return { genero: g, texto: t, ok: ok, nombreVoz: r.voz.name };
+  });
 }
 
 // Chrome corta las lecturas largas a los ~15 s, por eso se lee por oraciones
@@ -598,6 +686,21 @@ llenarIdiomas($("destino"), "en");
 llenarIdiomas($("idiomaSala"), "es");
 llenarIdiomas($("idiomaPrueba"), "en");
 
+// ---------- Selectores de acento ----------
+function llenarAcentos(select, idioma) {
+  select.innerHTML = "";
+  ACENTOS[idioma].forEach(([cod, nombre]) => {
+    const op = document.createElement("option");
+    op.value = cod;
+    op.text = nombre;
+    select.appendChild(op);
+  });
+  select.value = acentoPreferido[idioma];
+}
+llenarAcentos($("acentoSala"), $("idiomaSala").value);
+$("idiomaSala").addEventListener("change", () => llenarAcentos($("acentoSala"), $("idiomaSala").value));
+$("acentoSala").addEventListener("change", () => guardarAcento($("idiomaSala").value, $("acentoSala").value));
+
 // ---------- Pestañas ----------
 function mostrarVista(id) {
   document.querySelectorAll(".pestana").forEach(b => b.classList.toggle("activa", b.dataset.vista === id));
@@ -701,7 +804,11 @@ $("original").addEventListener("input", programarTraduccion);
 $("origen").addEventListener("change", () => { traducirAhora(); actualizarInfoVoces(); });
 $("destino").addEventListener("change", () => { traducirAhora(); actualizarInfoVoces(); });
 $("genero").addEventListener("change", actualizarInfoVoces);
-document.addEventListener("vocesListas", () => { actualizarInfoVoces(); actualizarVozPrueba(); });
+document.addEventListener("vocesListas", () => {
+  actualizarInfoVoces();
+  actualizarVozPrueba();
+  if (!$("pasoPrueba").hidden) actualizarResumenVoces();
+});
 
 $("btnIntercambiar").addEventListener("click", () => {
   const o = $("origen").value;
@@ -842,6 +949,9 @@ $("btnIrPrueba").addEventListener("click", () => {
   sala.nombre = nombre;
   sala.idioma = $("idiomaSala").value;
   sala.genero = $("generoSala").value;
+  guardarAcento(sala.idioma, $("acentoSala").value);
+  llenarAcentos($("acentoPrueba"), sala.idioma);
+  actualizarResumenVoces();
   $("generoPrueba").value = sala.genero;
   // por defecto, probar en un idioma distinto al propio
   $("idiomaPrueba").value = sala.idioma === "en" ? "es" : "en";
@@ -860,6 +970,38 @@ $("generoPrueba").addEventListener("change", () => {
   actualizarVozPrueba();
 });
 $("idiomaPrueba").addEventListener("change", actualizarVozPrueba);
+
+// Tarjeta 3: cómo sonarán hombres y mujeres en mi idioma, y qué acento lo daría completo
+function actualizarResumenVoces() {
+  const idioma = sala.idioma, acento = acentoPreferido[idioma];
+  const resumen = resumenVoces(idioma, acento);
+  const cont = $("resumenVoces");
+  cont.innerHTML = "";
+  resumen.forEach(r => { const d = document.createElement("div"); d.textContent = r.texto; cont.appendChild(d); });
+
+  // Si el acento elegido no tiene las dos voces, sugiere el país más cercano que sí las tenga
+  let sugerencia = "";
+  const completo = ac => ["hombre", "mujer"].every(g => { const r = elegirVoz(idioma, g, ac); return r.voz && r.generoOk && r.acentoOk; });
+  if (!completo(acento)) {
+    const alternativa = ordenAcentos(idioma, acento).slice(1).find(completo);
+    sugerencia = alternativa
+      ? "💡 En este equipo, " + nombreAcento(alternativa) + " tiene voz de hombre y de mujer. Si la eliges, escucharás ese acento en lugar del de " + nombreAcento(acento) + "."
+      : "En este equipo ningún acento de " + IDIOMAS[idioma].nombre + " tiene las dos voces; se usará siempre la más cercana a la que elegiste.";
+  }
+  $("sugerenciaAcento").textContent = sugerencia;
+}
+$("acentoPrueba").addEventListener("change", () => {
+  guardarAcento(sala.idioma, $("acentoPrueba").value);
+  $("acentoSala").value = $("acentoPrueba").value;
+  actualizarResumenVoces();
+});
+$("btnOirHombre").addEventListener("click", () => hablar(muestraVoz(sala.idioma), sala.idioma, "hombre"));
+$("btnOirMujer").addEventListener("click", () => hablar(muestraVoz(sala.idioma), sala.idioma, "mujer"));
+function muestraVoz(idioma) {
+  return { es: "Hola, ¿cómo estás? Así escucharás a los demás.", en: "Hello, how are you? This is how you will hear the others.",
+           fr: "Bonjour, comment ça va ?", de: "Hallo, wie geht es dir?", it: "Ciao, come stai?",
+           pt: "Olá, como você está?", ja: "こんにちは、お元気ですか。" }[idioma];
+}
 
 function actualizarVozPrueba() {
   const idioma = $("idiomaPrueba").value;
