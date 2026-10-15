@@ -729,6 +729,9 @@ if (!URL_SERVIDOR || URL_SERVIDOR.indexOf("PEGA_AQUI") === 0) {
   alert("Falta configurar el archivo config.js con la URL /exec de Apps Script.");
 } else if (!claveAcceso) {
   mostrarPantallaClave();
+} else {
+  // La clave guardada se revisa al abrir: si el administrador la cambió, aparece el candado de inmediato
+  servidor("verificarClave").catch(() => {});
 }
 
 // Si se abrió con ?sala=CODIGO, ir directo a la sala
